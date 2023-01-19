@@ -3,3 +3,5 @@
 	email = j.tebbett@outlook.com
 [init]
 	defaultBranch = main
+[core]
+    autocrlf = true
