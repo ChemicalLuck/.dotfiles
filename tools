@@ -1,0 +1,10 @@
+curl
+git
+gh
+apt-transport-https
+gzip
+tar
+unzip
+stow
+fd-find
+tmux

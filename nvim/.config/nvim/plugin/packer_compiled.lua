@@ -125,7 +125,7 @@ _G.packer_plugins = {
     url = "https://github.com/williamboman/mason.nvim"
   },
   monokai = {
-    config = { "\27LJ\2\0027\0\0\2\0\3\0\0056\0\0\0009\0\1\0'\1\2\0B\0\2\1K\0\1\0\24colorscheme monokai\bcmd\bvim\0" },
+    config = { "\27LJ\2\n7\0\0\3\0\3\0\0056\0\0\0009\0\1\0'\2\2\0B\0\2\1K\0\1\0\24colorscheme monokai\bcmd\bvim\0" },
     loaded = true,
     path = "/home/chem/.local/share/nvim/site/pack/packer/start/monokai",
     url = "https://github.com/sickill/vim-monokai"
@@ -170,7 +170,7 @@ _G.packer_plugins = {
 time([[Defining packer_plugins]], false)
 -- Config for: monokai
 time([[Config for monokai]], true)
-try_loadstring("\27LJ\2\0027\0\0\2\0\3\0\0056\0\0\0009\0\1\0'\1\2\0B\0\2\1K\0\1\0\24colorscheme monokai\bcmd\bvim\0", "config", "monokai")
+try_loadstring("\27LJ\2\n7\0\0\3\0\3\0\0056\0\0\0009\0\1\0'\2\2\0B\0\2\1K\0\1\0\24colorscheme monokai\bcmd\bvim\0", "config", "monokai")
 time([[Config for monokai]], false)
 
 _G._packer.inside_compile = false
