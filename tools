@@ -1,6 +1,5 @@
 curl
 git
-gh
 apt-transport-https
 gzip
 tar

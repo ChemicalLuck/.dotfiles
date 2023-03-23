@@ -7,13 +7,27 @@ echo "Installing Tools..."
 xargs sudo apt-get install -y <tools 
 stow git tmux
 
+echo "Installing Github CLI..."
+type -p curl >/dev/null || sudo apt install curl -y
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg &&\
+    sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg &&
+    echo "deb [arch=$(dpkg --pring-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null &&\
+    sudo apt update &&\
+    sudo apt install gh -y
+gh auth login
+
 echo "Installing Rust..."; 
 curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+source "$HOME/.cargo/env"
 
 echo "Installing Crates..."
 xargs cargo install <crates
+stow tealdeer
 
-stow bash tealdeer
+echo "Stowing Bash..."
+mv $HOME/.bashrc $HOME/.bashrc.bak
+stow bash
+source "$HOME/.bashrc"
 
 echo "Installing Node..."
 curl -fsSL https://deb.nodesource.com/setup_19.x | sudo -E bash - &&\
@@ -30,9 +44,8 @@ curl -sLO https://github.com/neovim/neovim/releases/download/stable/nvim-linux64
     sudo apt install -f
 stow nvim
 
-sudo apt-get install -y python-dev python-pip python3-dev python3-pip &&\
+sudo apt-get install -y python3-dev python3-pip &&\
     sudo pip3 install --upgrade pynvim
 
 echo "Installing Packages..."
 xargs sudo apt-get install -y <packages
-
