@@ -1,4 +1,11 @@
-local lsp = require("lsp-zero")
+local status, lsp = pcall(require, "lsp-zero")
+if not status then
+    return
+end
+local cmp_status, cmp = pcall(require, "cmp")
+if not cmp_status then
+    return
+end
 
 lsp.preset("recommended")
 
@@ -9,8 +16,7 @@ lsp.ensure_installed({
     'pyright'
 })
 
-local cmp = require("cmp")
-local cmp_select = {behavior = cmp.SelectBehavior.Select}
+local cmp_select = { behavior = cmp.SelectBehavior.Select }
 local cmp_mappings = lsp.defaults.cmp_mappings({
     ['<C-p>'] = cmp.mapping.select_prev_item(cmp_select),
     ['<C-n>'] = cmp.mapping.select_next_item(cmp_select),
@@ -19,7 +25,7 @@ local cmp_mappings = lsp.defaults.cmp_mappings({
 })
 
 lsp.set_preferences({
-    sign_icons = { }
+    sign_icons = {}
 })
 
 lsp.setup_nvim_cmp({
@@ -27,7 +33,8 @@ lsp.setup_nvim_cmp({
 })
 
 lsp.on_attach(function(client, bufnr)
-    local opts = {buffer = bufnr, remap = false}
+    local opts = { buffer = bufnr, remap = false }
+    lsp.buffer_autoformat()
 
     vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, opts)
     vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, opts)
@@ -42,4 +49,3 @@ lsp.on_attach(function(client, bufnr)
 end)
 
 lsp.setup()
-
