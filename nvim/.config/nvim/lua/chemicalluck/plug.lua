@@ -77,6 +77,8 @@ packer.startup(function(use)
         requires = { 'kyazdani42/nvim-web-devicons', opt = true }
     }
 
+    use("folke/which-key.nvim")
+
     if packer_bootstrap then
         require('packer').sync()
     end
