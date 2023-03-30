@@ -8,7 +8,10 @@ telescope.setup {
         file_browser = {
             hijack_netrw = true,
         }
-    }
+    },
+    defaults = {
+        borderchars = { "█", " ", "▀", "█", "█", " ", " ", "▀" },
+    },
 }
 
 local builtin = require('telescope.builtin')
@@ -22,4 +25,4 @@ vim.keymap.set('n', '<leader>pb', builtin.buffers, { desc = "Show Buffers" })
 telescope.load_extension('file_browser')
 
 vim.keymap.set('n', '<leader>fb', ':Telescope file_browser path=%:p:h select_buffer=true<cr>',
-{ noremap = true, desc = "Show File Browser" })
+    { noremap = true, desc = "Show File Browser" })

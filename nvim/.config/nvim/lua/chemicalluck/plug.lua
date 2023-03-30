@@ -34,12 +34,7 @@ packer.startup(function(use)
         }
     }
 
-    use({
-        'olimorris/onedarkpro.nvim',
-        config = function()
-            vim.cmd('colorscheme onedark')
-        end
-    })
+    use('loctvl842/monokai-pro.nvim')
 
     use {
         'nvim-treesitter/nvim-treesitter',
