@@ -1,27 +1,37 @@
-vim.opt.nu = true
-vim.opt.relativenumber = true
+local opt = vim.opt
+local g = vim.g
 
-vim.opt.tabstop = 4
-vim.opt.softtabstop = 4
-vim.opt.shiftwidth = 4
-vim.opt.expandtab = true
+-- Line numbers
+opt.nu = true
+opt.relativenumber = true
 
-vim.opt.smartindent = true
+-- Indentation
+opt.tabstop = 4
+opt.softtabstop = 4
+opt.shiftwidth = 4
+opt.expandtab = true
+opt.smartindent = true
 
-vim.opt.wrap = false
+-- search patterns
+opt.ignorecase = true
+opt.smartcase = true
 
-vim.opt.swapfile = false
-vim.opt.backup = false
+opt.wrap = false
 
-vim.opt.termguicolors = true
-vim.opt.background = "dark"
+opt.swapfile = false
+opt.backup = false
 
-vim.opt.scrolloff = 8
-vim.opt.signcolumn = "yes"
-vim.opt.isfname:append("@-@")
+opt.termguicolors = true
+opt.background = "dark"
 
-vim.opt.colorcolumn = "80"
+opt.scrolloff = 8
+opt.signcolumn = "yes"
+opt.isfname:append("@-@")
 
-vim.opt.updatetime = 50
+opt.colorcolumn = "80"
 
-vim.g.mapleader = " "
+opt.updatetime = 50
+
+g.mapleader = " "
+
+opt.shortmess:append "I"
