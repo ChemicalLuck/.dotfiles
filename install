@@ -7,27 +7,31 @@ echo "Installing Tools..."
 xargs sudo apt-get install -y <tools 
 stow git tmux
 
-echo "Installing Rust..."; 
-curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+if ! which cargo > /dev/null; then
+    echo "Installing Rust..."
+    curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+fi
 
 echo "Installing Crates..."
 xargs cargo install <crates
+stow tealdeer
 
-stow bash tealdeer
-
-echo "Installing Node..."
-curl -fsSL https://deb.nodesource.com/setup_19.x | sudo -E bash - &&\
-    sudo apt-get install -y nodejs &&\
-    sudo npm install -g tree-sitter-cli neovim
+echo "Installing Node Version Manager..."
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+source ~/.bashrc
+nvm install node
+sudo npm install -g tree-sitter-cli neovim
 
 echo "Installing Luarocks..."
 sudo apt-get -y install luarocks
 
-echo "Installing Neovim..."
-curl -sLO https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.deb &&\
-    sudo dpkg -i nvim-linux64.deb &&\
-    sudo rm nvim-linux64.deb &&\
-    sudo apt install -f
+if [ $(dpkg-query -W -f='${Status}' neovim 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
+    echo "Installing Neovim..."
+    curl -sLO https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.deb &&\
+        sudo dpkg -i nvim-linux64.deb &&\
+        sudo rm nvim-linux64.deb &&\
+        sudo apt install -f
+fi
 stow nvim
 
 sudo apt-get install -y python-dev python-pip python3-dev python3-pip &&\
@@ -35,4 +39,10 @@ sudo apt-get install -y python-dev python-pip python3-dev python3-pip &&\
 
 echo "Installing Packages..."
 xargs sudo apt-get install -y <packages
+
+if [ ! -f '~/.bashrc' ]; then
+    mv ~/.bashrc ~/.bashrc.bak
+fi
+stow bash
+source ~/.bashrc
 
