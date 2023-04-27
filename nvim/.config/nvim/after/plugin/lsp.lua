@@ -43,27 +43,25 @@ lsp.on_attach(function(client, bufnr)
     end
 
 
-    nmap("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
-    nmap("<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ctions")
+    nmap('<leader>rn', function() vim.lsp.buf.rename() end, '[R]e[n]ame')
+    nmap('<leader>ca', function() vim.lsp.buf.code_action() end, '[C]ode [A]ction')
 
-    nmap("gd", vim.lsp.buf.definition, "[G]oto [D]efinition")
-    nmap("gI", vim.lsp.buf.implementation, "[G]oto [I]mplementation")
-    nmap("gt", vim.lsp.buf.type_defintion, "[G]oto [T]ype Definition")
-    nmap("gD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
+    nmap('gd', function() vim.lsp.buf.definition() end, '[G]oto [D]efinition')
+    nmap('gI', function() vim.lsp.buf.implementation() end, '[G]oto [I]mplementation')
+    nmap('<leader>D', function() vim.lsp.buf.type_definition() end, 'Goto Type [D]efinition')
+    nmap('gD', function() vim.lsp.buf.declaration() end, '[G]oto [D]eclaration')
 
-    nmap("K", vim.lsp.buf.hover(), "Hover Docs")
-    name("<C-k>", vim.lsp.buf.signature_help, "Signature Docs")
+    nmap('K', function() vim.lsp.buf.hover() end, 'Hover Documentation')
+    nmap('<C-k>', function() vim.lsp.buf.signature_help() end, 'Signature Documentation')
 
-    nmap("<leader>vd", vim.diagnostic.open_float, "[V}iew [D]iagnostic")
-    nmap("<leader>ld", vim.diagnostic.setloclist, "[L]ist [D]iagnostics")
-    nmap("[d", vim.diagnostic.goto_prev, "Cycle Prev Diagnostic")
-    nmap("]d", vim.diagnostic.goto_next, "Cycle  Next Diagnostic")
+    nmap('[d', function() vim.diagnostic.goto_prev() end, "Cycle Prev Diagnostic")
+    nmap(']d', function() vim.diagnostic.goto_next() end, "Cycle Next Diagnostic")
 
-    nmap("<leader>wa", vim.lsp.buf.add_workspace_folder, "[W]orkspace [A]dd Folder")
-    nmap("<leader>wr", vim.lsp.buf.remove_workspace_folder, "[W]orkspace [R]emove Folder")
-    nmap("<leader>wl", function()
+    nmap('<leader>wa', function() vim.lsp.buf.add_workspace_folder() end, '[W]orkspace [A]dd Folder')
+    nmap('<leader>wr', function() vim.lsp.buf.remove_workspace_folder() end, '[W]orkspace [R]emove Folder')
+    nmap('<leader>wl', function()
         print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-    end, "[W]orkspace [L]ist Folders")
+    end, '[W]orkspace [L]ist Folders')
 end)
 
 lsp.setup()

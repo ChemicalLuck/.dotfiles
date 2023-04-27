@@ -31,11 +31,10 @@ vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = "[S]earch curren
 vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = "[G]rep [F]iles" })
 vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = "[S]earch [D]iagnostics" })
 
-vim.keymap.set('n', 'gr', builtin.lsp_references, { desc = '[G]oto [R]eferences'})
+vim.keymap.set('n', 'gr', builtin.lsp_references, { desc = '[G]oto [R]eferences' })
 
 vim.keymap.set('n', '<leader>ds', builtin.lsp_document_symbols, { desc = '[D]ocument [S]ymbols' })
 vim.keymap.set('n', '<leader>ws', builtin.lsp_dynamic_workspace_symbols, { desc = '[W]orkspace [S]ymbols' })
-
 
 telescope.load_extension('file_browser')
 
