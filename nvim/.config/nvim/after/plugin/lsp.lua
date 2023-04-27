@@ -35,25 +35,35 @@ lsp.setup_nvim_cmp({
 lsp.on_attach(function(client, bufnr)
     lsp.buffer_autoformat()
 
-    vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end,
-        { buffer = bufnr, remap = false, desc = "Goto Definition" })
-    vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, { buffer = bufnr, remap = false, desc = "Show Hover" })
-    vim.keymap.set("n", "<leader>vws", function() vim.lsp.buf.workspace_symbol() end,
-        { buffer = bufnr, remap = false, desc = "Search Workspace Symbols" })
-    vim.keymap.set("n", "<leader>vd", function() vim.diagnostic.open_float() end,
-        { buffer = bufnr, remap = false, desc = "Open Diagnostic" })
-    vim.keymap.set("n", "[d", function() vim.diagnostic.goto_prev() end,
-        { buffer = bufnr, remap = false, desc = "Cycle Next Diagnostic" })
-    vim.keymap.set("n", "]d", function() vim.diagnostic.goto_next() end,
-        { buffer = bufnr, remap = false, desc = "Cycle Prev Diagnostic" })
-    vim.keymap.set("n", "<leader>vca", function() vim.lsp.buf.code_action() end,
-        { buffer = bufnr, remap = false, desc = "Show Code Actions" })
-    vim.keymap.set("n", "<leader>vrr", function() vim.lsp.buf.references() end,
-        { buffer = bufnr, remap = false, desc = "Find References" })
-    vim.keymap.set("n", "<leader>vrn", function() vim.lsp.buf.rename() end,
-        { buffer = bufnr, remap = false, desc = "Rename Symbol" })
-    vim.keymap.set("i", "<C-h>", function() vim.lsp.buf.signature_help() end,
-        { buffer = bufnr, remap = false, desc = "Signature Help" })
+    local nmap = function(keys, func, desc)
+        if desc then
+            desc = 'LSP: ' .. desc
+        end
+        vim.keymap.set('n', keys, func, { buffer = bufnr, desc = desc })
+    end
+
+
+    nmap("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
+    nmap("<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ctions")
+
+    nmap("gd", vim.lsp.buf.definition, "[G]oto [D]efinition")
+    nmap("gI", vim.lsp.buf.implementation, "[G]oto [I]mplementation")
+    nmap("gt", vim.lsp.buf.type_defintion, "[G]oto [T]ype Definition")
+    nmap("gD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
+
+    nmap("K", vim.lsp.buf.hover(), "Hover Docs")
+    name("<C-k>", vim.lsp.buf.signature_help, "Signature Docs")
+
+    nmap("<leader>vd", vim.diagnostic.open_float, "[V}iew [D]iagnostic")
+    nmap("<leader>ld", vim.diagnostic.setloclist, "[L]ist [D]iagnostics")
+    nmap("[d", vim.diagnostic.goto_prev, "Cycle Prev Diagnostic")
+    nmap("]d", vim.diagnostic.goto_next, "Cycle  Next Diagnostic")
+
+    nmap("<leader>wa", vim.lsp.buf.add_workspace_folder, "[W]orkspace [A]dd Folder")
+    nmap("<leader>wr", vim.lsp.buf.remove_workspace_folder, "[W]orkspace [R]emove Folder")
+    nmap("<leader>wl", function()
+        print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+    end, "[W]orkspace [L]ist Folders")
 end)
 
 lsp.setup()
