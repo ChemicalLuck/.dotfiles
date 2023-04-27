@@ -29,6 +29,13 @@ packer.startup(function(use)
         }
     }
     use {
+        'nvim-telescope/telescope-fzf-native.nvim',
+        build = 'make',
+        cond = function()
+            return vim.fn.executable == 1
+        end
+    }
+    use {
         'nvim-telescope/telescope-file-browser.nvim',
         requires = {
             { 'nvim-telescope/telescope.nvim' },
@@ -75,6 +82,13 @@ packer.startup(function(use)
     }
 
     use("folke/which-key.nvim")
+
+    use {
+        'numToStr/Comment.nvim',
+        config = function()
+            require('Comment').setup()
+        end
+    }
 
     if packer_bootstrap then
         require('packer').sync()
