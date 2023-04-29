@@ -88,6 +88,8 @@ packer.startup(function(use)
         end
     }
 
+    use('lukas-reineke/indent-blankline.nvim')
+
     if packer_bootstrap then
         require('packer').sync()
     end
