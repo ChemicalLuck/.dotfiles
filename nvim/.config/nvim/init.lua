@@ -169,6 +169,44 @@ require('lazy').setup({
         build = ':TSUpdate',
     },
     { 'nvim-treesitter/nvim-treesitter-context', opts = {} },
+    { 'lukas-reineke/indent-blankline.nvim',     opts = {} },
+    {
+        'folke/trouble.nvim',
+        config = function()
+            require('trouble').setup({
+                icons = false,
+                fold_open = "v",      -- icon used for open folds
+                fold_closed = ">",    -- icon used for closed folds
+                indent_lines = false, -- add an indent guide below the fold icons
+                signs = {
+                    -- icons / text used for a diagnostic
+                    error = "error",
+                    warning = "warn",
+                    hint = "hint",
+                    information = "info"
+                },
+                use_diagnostic_signs = false -- enabling this will use the signs defined in your lsp client
+            })
+            vim.keymap.set("n", "<leader>xx", "<cmd>TroubleToggle<cr>",
+                { silent = true, noremap = true }
+            )
+            vim.keymap.set("n", "<leader>xw", "<cmd>TroubleToggle workspace_diagnostics<cr>",
+                { silent = true, noremap = true }
+            )
+            vim.keymap.set("n", "<leader>xd", "<cmd>TroubleToggle document_diagnostics<cr>",
+                { silent = true, noremap = true }
+            )
+            vim.keymap.set("n", "<leader>xl", "<cmd>TroubleToggle loclist<cr>",
+                { silent = true, noremap = true }
+            )
+            vim.keymap.set("n", "<leader>xq", "<cmd>TroubleToggle quickfix<cr>",
+                { silent = true, noremap = true }
+            )
+            vim.keymap.set("n", "gR", "<cmd>TroubleToggle lsp_references<cr>",
+                { silent = true, noremap = true }
+            )
+        end,
+    },
 }, {})
 
 -- Set highlight on search
@@ -432,6 +470,13 @@ mason_lspconfig.setup_handlers {
         }
     end,
 }
+
+vim.diagnostic.config({
+    virtual_text = true,
+    update_in_insert = true,
+    underline = true,
+    severity_sort = true,
+})
 
 -- nvim-cmp setup
 local cmp = require 'cmp'
