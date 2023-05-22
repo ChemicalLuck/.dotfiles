@@ -8,3 +8,6 @@
 	helper = !/usr/bin/gh auth git-credential
 [pull]
 	rebase = false
+[core]
+	autocrlf = false
+	eol = lf
