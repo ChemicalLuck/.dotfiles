@@ -36,19 +36,27 @@ install_from_file() {
     install_from_array "${packages[@]}"
 }
 
+stow_dir() {
+    echo -e "Stowing $1..."
+    stow "$1"
+}
+
 echo "Installing Compilers..."
 compilers=("gcc" "g++" "make")
 install_from_array "${compilers[@]}"
 
 echo "Installing Tools..."
 install_from_file "tools"
-stow git tmux
+stow_dir "git"
+stow_dir "tmux"
 
 if ! which cargo > /dev/null; then
     echo "Installing Rust..."
     curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
     source "$HOME/.cargo/env"
 fi
+install_if_not_installed "lld"
+stow_dir "rust"
 
 if ! which gh > /dev/null; then
     echo "Installing Github CLI..."
@@ -58,7 +66,7 @@ if ! which gh > /dev/null; then
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null &&\
         sudo apt update &&\
         sudo apt install gh -y
-            gh auth login
+    gh auth login
 fi
 
 echo "Installing Crates..."
@@ -70,7 +78,7 @@ while IFS= read -r crate_name; do
         echo -e "    ${GREEN}$crate_name is already installed${NC}"
     fi
 done < "crates"
-stow tealdeer
+stow_dir "tealdeer"
 
 if ! which node > /dev/null; then
     echo "Installing Node Version Manager..."
@@ -92,7 +100,7 @@ if [ $(dpkg-query -W -f='${Status}' neovim 2>/dev/null | grep -c "ok installed")
 else
     echo -e "${GREEN}Neovim is already installed${NC}"
 fi
-stow nvim
+stow_dir "nvim"
 
 echo "Installing Python Packages..."
 python_packages=("python3-dev" "python3-pip")
@@ -107,7 +115,7 @@ install_if_not_installed "keychain"
 if [ ! -f '~/.bashrc' ]; then
     mv ~/.bashrc ~/.bashrc.bak
 fi
-stow bash
+stow_dir "bash"
 source ~/.bashrc
 
 echo "Environment Setup Complete!"
