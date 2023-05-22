@@ -1,10 +1,47 @@
 #!/bin/bash
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m'
+
+install_if_not_installed() {
+    local package="$1"
+
+    if ! dpkg -s "$package" >/dev/null 2>&1; then
+        echo -e "    Installing $package..."
+        sudo apt-get install -y "$package"
+    else
+        echo -e "    ${GREEN}$package is already installed${NC}"
+    fi
+}
+
+install_from_array() {
+    local packages=("$@")
+    
+    echo -e "  Installing ${#packages[@]} packages..."
+    for package in "${packages[@]}"; do
+        install_if_not_installed "$package"
+    done
+}
+
+install_from_file() {
+    local file="$1"
+    local packages=()
+
+    while IFS= read -r package; do
+        packages+=("$package")
+    done < "$file"
+
+    install_from_array "${packages[@]}"
+}
+
 echo "Installing Compilers..."
-sudo apt-get install -y gcc g++ make
+compilers=("gcc" "g++" "make")
+install_from_array "${compilers[@]}"
 
 echo "Installing Tools..."
-xargs sudo apt-get install -y <tools 
+install_from_file "tools"
 stow git tmux
 
 if ! which cargo > /dev/null; then
@@ -13,32 +50,38 @@ if ! which cargo > /dev/null; then
     source "$HOME/.cargo/env"
 fi
 
-echo "Installing Github CLI..."
-type -p curl >/dev/null || sudo apt install curl -y
-curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg &&\
-    sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg &&
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null &&\
-    sudo apt update &&\
-    sudo apt install gh -y
-gh auth login
+if ! which gh > /dev/null; then
+    echo "Installing Github CLI..."
+    type -p curl >/dev/null || sudo apt install curl -y
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg &&\
+        sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg &&
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null &&\
+        sudo apt update &&\
+        sudo apt install gh -y
+            gh auth login
+fi
 
 echo "Installing Crates..."
-xargs cargo install <crates
+while IFS= read -r crate_name; do
+    if ! cargo install --list | grep -q "^$crate_name "; then
+        echo "  Installing $crate_name..."
+        cargo install "$crate_name"
+    else
+        echo -e "    ${GREEN}$crate_name is already installed${NC}"
+    fi
+done < "crates"
 stow tealdeer
 
-echo "Installing Node Version Manager..."
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-source ~/.bashrc
-nvm install node
-sudo npm install -g tree-sitter-cli neovim
-
-echo "Stowing Bash..."
-mv $HOME/.bashrc $HOME/.bashrc.bak
-stow bash
-source "$HOME/.bashrc"
+if ! which node > /dev/null; then
+    echo "Installing Node Version Manager..."
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+    source ~/.bashrc
+    nvm install node
+    sudo npm install -g tree-sitter-cli neovim
+fi
 
 echo "Installing Luarocks..."
-sudo apt-get -y install luarocks
+install_if_not_installed "luarocks"
 
 if [ $(dpkg-query -W -f='${Status}' neovim 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
     echo "Installing Neovim..."
@@ -46,17 +89,25 @@ if [ $(dpkg-query -W -f='${Status}' neovim 2>/dev/null | grep -c "ok installed")
         sudo dpkg -i nvim-linux64.deb &&\
         sudo rm nvim-linux64.deb &&\
         sudo apt install -f
+else
+    echo -e "${GREEN}Neovim is already installed${NC}"
 fi
 stow nvim
 
-sudo apt-get install -y python3-dev python3-pip &&\
-    sudo pip3 install --upgrade pynvim
+echo "Installing Python Packages..."
+python_packages=("python3-dev" "python3-pip")
+install_from_array "${python_packages[@]}"
+sudo pip3 install --upgrade pynvim
 
 echo "Installing Packages..."
-xargs sudo apt-get install -y <packages
+install_from_file "packages"
 
+echo "Stowing Bash..."
+install_if_not_installed "keychain"
 if [ ! -f '~/.bashrc' ]; then
     mv ~/.bashrc ~/.bashrc.bak
 fi
 stow bash
 source ~/.bashrc
+
+echo "Environment Setup Complete!"
