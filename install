@@ -91,12 +91,14 @@ fi
 echo "Installing Luarocks..."
 install_if_not_installed "luarocks"
 
-if [ $(dpkg-query -W -f='${Status}' neovim 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
+if ! which nvim > /dev/null; then
     echo "Installing Neovim..."
-    curl -sLO https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.deb &&\
-        sudo dpkg -i nvim-linux64.deb &&\
-        sudo rm nvim-linux64.deb &&\
-        sudo apt install -f
+    curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage && \
+    sudo chmod u+x nvim.appimage && \
+    ./nvim.appimage --appimage-extract && \
+    sudo mv squashfs-root && \
+    sudo ln -s /squashfs-root/AppRun /usr/bin/nvim && \
+    rm nvim.appimage
 else
     echo -e "${GREEN}Neovim is already installed${NC}"
 fi
