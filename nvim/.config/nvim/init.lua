@@ -41,7 +41,11 @@ require('lazy').setup({
             'williamboman/mason-lspconfig.nvim',
 
             -- Status updates for LSP
-            { 'j-hui/fidget.nvim',       opts = {} },
+            {
+                'j-hui/fidget.nvim',
+                opts = {},
+                tag = 'legacy'
+            },
 
             -- Additional lua config
             'folke/neodev.nvim',
@@ -207,6 +211,7 @@ require('lazy').setup({
             )
         end,
     },
+    require 'chemicalluck.plugins.autoformat',
 }, {})
 
 -- Set highlight on search
