@@ -136,3 +136,6 @@ export NVM_DIR="$HOME/.nvm"
 
 /usr/bin/keychain -q --nogui $HOME/.ssh/github_ed25519
 source $HOME/.keychain/$HOSTNAME-sh
+
+# thefuck
+eval "$(thefuck --alias)"
