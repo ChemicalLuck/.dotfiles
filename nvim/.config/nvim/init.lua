@@ -26,7 +26,7 @@ require('lazy').setup({
     'tpope/vim-rhubarb',
 
     -- Copilot
-    'github/copilot.vim',
+    -- 'github/copilot.vim',
 
 
     -- Detect tabstop and shiftwidth automatically
@@ -249,6 +249,14 @@ vim.o.timeoutlen = 300
 vim.o.completeopt = 'menuone,noselect'
 
 vim.o.termguicolors = true
+
+vim.o.wrap = false
+
+-- Show effects of substitution, etc, as typed.
+vim.o.inccommand = 'split'
+
+vim.o.foldmethod = 'expr'
+vim.o.foldexpr = 'nvim_treesitter#foldexpr()'
 
 -- [[ Basic Keymaps ]]
 
@@ -531,3 +539,5 @@ cmp.setup {
         { name = 'luasnip' },
     },
 }
+
+require 'chemicalluck.plugins.openfolds'
