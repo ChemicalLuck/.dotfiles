@@ -26,7 +26,7 @@ require('lazy').setup({
     'tpope/vim-rhubarb',
 
     -- Copilot
-    -- 'github/copilot.vim',
+    'github/copilot.vim',
 
 
     -- Detect tabstop and shiftwidth automatically
