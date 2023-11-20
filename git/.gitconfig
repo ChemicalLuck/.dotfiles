@@ -11,3 +11,4 @@
 [core]
 	autocrlf = false
 	eol = lf
+	editor = nvim

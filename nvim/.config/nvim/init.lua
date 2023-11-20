@@ -297,6 +297,12 @@ require('telescope').setup {
     },
 }
 
+vim.keymap.set('n', '<leader>t', function()
+    vim.cmd("split")
+    vim.cmd("terminal")
+end, { desc = '[t] Open a split terminal' })
+vim.cmd([[autocmd TermOpen * startinsert]])
+
 -- Enable telescope fzf native, if installed
 pcall(require('telescope').load_extension, 'fzf')
 -- Enable telescope file browser, if installed

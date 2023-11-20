@@ -118,7 +118,6 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
-. "$HOME/.cargo/env"
 
 eval "$(zoxide init bash)"
 
@@ -139,3 +138,4 @@ source $HOME/.keychain/$HOSTNAME-sh
 
 # thefuck
 eval "$(thefuck --alias)"
+. "$HOME/.cargo/env"
