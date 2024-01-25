@@ -59,6 +59,7 @@ if ! which cargo > /dev/null; then
 fi
 install_if_not_installed "lld"
 stow_dir "rust"
+rustup default nightly
 
 if ! which gh > /dev/null; then
     echo "Installing Github CLI..."
