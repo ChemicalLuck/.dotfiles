@@ -41,6 +41,8 @@ stow_dir() {
     stow "$1"
 }
 
+sudo apt-get update && sudo apt-get upgrade -y
+
 echo "Installing Compilers..."
 compilers=("gcc" "g++" "make")
 install_from_array "${compilers[@]}"
