@@ -44,7 +44,7 @@ stow_dir() {
 sudo apt-get update && sudo apt-get upgrade -y
 
 echo "Installing Compilers..."
-compilers=("gcc" "g++" "make" "clang" "cc")
+compilers=("gcc" "g++" "make" "clang")
 install_from_array "${compilers[@]}"
 
 echo "Installing Tools..."
