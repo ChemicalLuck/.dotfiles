@@ -119,23 +119,31 @@ if ! shopt -oq posix; then
   fi
 fi
 
-eval "$(zoxide init bash)"
+# Misc ENV
+export EDITOR="/usr/bin/nvim"
 
 # fzf 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 export FZF_DEFAULT_COMMAND="fd --hidden"
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_ALT_C_COMMAND="$FZF_DEFAULT_COMMAND – type d"
+
+# Bin paths
 export PATH="${PATH:+${PATH}:}~/.local/bin"
 export PATH="${PATH:+${PATH}:}~/go/bin"
 
+# nvm
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-/usr/bin/keychain -q --nogui $HOME/.ssh/github_ed25519
+# keychain
+eval $(keychain -q --nogui --agents ssh --eval ~/.ssh/github_ed25519)
 source $HOME/.keychain/$HOSTNAME-sh
 
-# thefuck
-eval "$(thefuck --alias)"
+# rust
 . "$HOME/.cargo/env"
+
+eval "$(zoxide init bash)"
+
+source /home/chem/.config/broot/launcher/bash/br
