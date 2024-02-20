@@ -7,3 +7,4 @@ unzip
 stow
 fd-find
 tmux
+fzf
