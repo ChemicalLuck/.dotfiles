@@ -130,7 +130,7 @@ export FZF_ALT_C_COMMAND="$FZF_DEFAULT_COMMAND – type d"
 
 # Bin paths
 export PATH="${PATH:+${PATH}:}~/.local/bin"
-export PATH="${PATH:+${PATH}:}~/go/bin"
+export PATH="${PATH:+${PATH}:}/usr/local/go/bin"
 
 # nvm
 export NVM_DIR="$HOME/.nvm"
