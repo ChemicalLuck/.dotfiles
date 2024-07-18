@@ -154,6 +154,7 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+vim.opt.shiftwidth = 4
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -255,83 +256,93 @@ require("lazy").setup({
 				topdelete = { text = "‾" },
 				changedelete = { text = "~" },
 			},
+			on_attach = function(bufnr)
+				-- Navigation
+				vim.keymap.set(
+					"n",
+					"[h",
+					require("gitsigns").prev_hunk,
+					{ buffer = bufnr, desc = "Go to Previous Hunk" }
+				)
+				vim.keymap.set("n", "]h", require("gitsigns").next_hunk, { buffer = bufnr, desc = "Go to Next Hunk" })
+				vim.keymap.set(
+					"n",
+					"<leader>hp",
+					require("gitsigns").preview_hunk,
+					{ buffer = bufnr, desc = "[H]unk [P]review" }
+				)
+
+				-- Staging
+				vim.keymap.set(
+					"n",
+					"<leader>hs",
+					require("gitsigns").stage_hunk,
+					{ buffer = bufnr, desc = "[H]unk [S]tage" }
+				)
+				vim.keymap.set("v", "<leader>hs", function()
+					require("gitsigns").stage_hunk({
+						vim.fn.line("."),
+						vim.fn.line("v"),
+					})
+				end, { buffer = bufnr, desc = "[H]unk [S]tage" })
+				vim.keymap.set(
+					"n",
+					"<leader>hS",
+					require("gitsigns").stage_buffer,
+					{ buffer = bufnr, desc = "[H]unk [S]tage buffer" }
+				)
+				vim.keymap.set(
+					"n",
+					"<leader>hu",
+					require("gitsigns").undo_stage_hunk,
+					{ buffer = bufnr, desc = "[H]unk [U]ndo stage" }
+				)
+
+				-- Reseting
+				vim.keymap.set(
+					"n",
+					"<leader>hr",
+					require("gitsigns").reset_hunk,
+					{ buffer = bufnr, desc = "[H]unk [R]eset" }
+				)
+				vim.keymap.set("v", "<leader>hr", function()
+					require("gitsigns").reset_hunk({
+						vim.fn.line("."),
+						vim.fn.line("v"),
+					})
+				end, { buffer = bufnr, desc = "[H]unk [R]eset" })
+				vim.keymap.set(
+					"n",
+					"<leader>hR",
+					require("gitsigns").reset_buffer,
+					{ buffer = bufnr, desc = "[H]unk [R]eset buffer" }
+				)
+
+				-- Blame
+				vim.keymap.set("n", "<leader>hb", function()
+					require("gitsigns").blame_line({
+						full = true,
+					})
+				end, { buffer = bufnr, desc = "[H]unk [B]lame" })
+				vim.keymap.set(
+					"n",
+					"<leader>hB",
+					require("gitsigns").toggle_current_line_blame,
+					{ buffer = bufnr, desc = "Toggle [H]unk [B]lame" }
+				)
+
+				-- Diff
+				vim.keymap.set(
+					"n",
+					"<leader>hd",
+					require("gitsigns").diffthis,
+					{ buffer = bufnr, desc = "[H]unk [D]iff" }
+				)
+				vim.keymap.set("n", "<leader>hD", function()
+					require("gitsigns").diffthis("~")
+				end, { buffer = bufnr, desc = "[H]unk [D]iff" })
+			end,
 		},
-		on_attach = function(bufnr)
-			-- Navigation
-			vim.keymap.set("n", "[h", require("gitsigns").prev_hunk, { buffer = bufnr, desc = "Go to Previous Hunk" })
-			vim.keymap.set("n", "]h", require("gitsigns").next_hunk, { buffer = bufnr, desc = "Go to Next Hunk" })
-			vim.keymap.set(
-				"n",
-				"<leader>hp",
-				require("gitsigns").preview_hunk,
-				{ buffer = bufnr, desc = "[H]unk [P]review" }
-			)
-
-			-- Staging
-			vim.keymap.set(
-				"n",
-				"<leader>hs",
-				require("gitsigns").stage_hunk,
-				{ buffer = bufnr, desc = "[H]unk [S]tage" }
-			)
-			vim.keymap.set("v", "<leader>hs", function()
-				require("gitsigns").stage_hunk({
-					vim.fn.line("."),
-					vim.fn.line("v"),
-				})
-			end, { buffer = bufnr, desc = "[H]unk [S]tage" })
-			vim.keymap.set(
-				"n",
-				"<leader>hS",
-				require("gitsigns").stage_buffer,
-				{ buffer = bufnr, desc = "[H]unk [S]tage buffer" }
-			)
-			vim.keymap.set(
-				"n",
-				"<leader>hu",
-				require("gitsigns").undo_stage_hunk,
-				{ buffer = bufnr, desc = "[H]unk [U]ndo stage" }
-			)
-
-			-- Reseting
-			vim.keymap.set(
-				"n",
-				"<leader>hr",
-				require("gitsigns").reset_hunk,
-				{ buffer = bufnr, desc = "[H]unk [R]eset" }
-			)
-			vim.keymap.set("v", "<leader>hr", function()
-				require("gitsigns").reset_hunk({
-					vim.fn.line("."),
-					vim.fn.line("v"),
-				})
-			end, { buffer = bufnr, desc = "[H]unk [R]eset" })
-			vim.keymap.set(
-				"n",
-				"<leader>hR",
-				require("gitsigns").reset_buffer,
-				{ buffer = bufnr, desc = "[H]unk [R]eset buffer" }
-			)
-
-			-- Blame
-			vim.keymap.set("n", "<leader>hb", function()
-				require("gitsigns").blame_line({
-					full = true,
-				})
-			end, { buffer = bufnr, desc = "[H]unk [B]lame" })
-			vim.keymap.set(
-				"n",
-				"<leader>hB",
-				require("gitsigns").toggle_current_line_blame,
-				{ buffer = bufnr, desc = "Toggle [H]unk [B]lame" }
-			)
-
-			-- Diff
-			vim.keymap.set("n", "<leader>hd", require("gitsigns").diffthis, { buffer = bufnr, desc = "[H]unk [D]iff" })
-			vim.keymap.set("n", "<leader>hD", function()
-				require("gitsigns").diffthis("~")
-			end, { buffer = bufnr, desc = "[H]unk [D]iff" })
-		end,
 	},
 	"github/copilot.vim",
 
@@ -657,6 +668,7 @@ require("lazy").setup({
 
 				-- Python
 				ruff = {},
+				ruff_lsp = {},
 
 				-- Go
 				gopls = {},
