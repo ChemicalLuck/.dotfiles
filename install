@@ -107,6 +107,12 @@ else
 fi
 stow_dir "nvim"
 
+echo "Installing Python 3.12..."
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt-get update
+python_apt_packages=("python3.12" "python3.12-distutils" "python3.12-venv")
+install_from_array "${python_apt_packages[@]}"
+
 echo "Installing Python Packages..."
 python_packages=("python3-dev" "python3-pip")
 install_from_array "${python_packages[@]}"
