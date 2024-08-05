@@ -146,4 +146,5 @@ source $HOME/.keychain/$HOSTNAME-sh
 
 eval "$(zoxide init bash)"
 
-source /home/chem/.config/broot/launcher/bash/br
+# Turso
+export PATH="/home/chem/.turso:$PATH"
