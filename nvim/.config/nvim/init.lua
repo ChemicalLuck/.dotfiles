@@ -344,7 +344,7 @@ require("lazy").setup({
 			end,
 		},
 	},
-	"github/copilot.vim",
+	-- "github/copilot.vim",
 
 	-- NOTE: Plugins can also be configured to run Lua code when they are loaded.
 	--
@@ -659,7 +659,7 @@ require("lazy").setup({
 			--        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
 			local servers = {
 				-- TypeScript / JavaScript
-				tsserver = {},
+				ts_ls = {},
 				eslint_d = {},
 				prettier = {},
 
