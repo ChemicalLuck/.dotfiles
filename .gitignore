@@ -1,0 +1,30 @@
+# Per-machine override files, should they ever land inside the repo.
+# (The real ones live in $HOME: ~/.gitconfig.local, ~/.bashrc.local.)
+# NOTE: do not use *.local here — it also matches the .local/ XDG directory.
+.gitconfig.local
+.bashrc.local
+
+# Ansible
+*.retry
+
+# Claude: the claude package must ONLY ever contain settings.json.
+# Whitelist it and hard-ignore everything else (credentials, sessions,
+# history, projects, plugins, …) so secrets/state can never be committed.
+stow/claude/.claude/*
+!stow/claude/.claude/settings.json
+
+# Defensive: XDG app data that previously leaked into nvim/.config via a
+# folded stow symlink. Real configs live in $HOME/.config, not in this repo.
+stow/nvim/.config/dconf/
+stow/nvim/.config/enchant/
+stow/nvim/.config/gedit/
+stow/nvim/.config/gh/
+stow/nvim/.config/go/
+stow/nvim/.config/google-chrome/
+stow/nvim/.config/google-chrome-for-testing/
+stow/nvim/.config/pulse/
+stow/nvim/.config/ruff/
+stow/nvim/.config/uv/
+stow/nvim/.config/fish/
+stow/nvim/.config/tmuxinator/
+stow/nvim/.config/*-nodejs/

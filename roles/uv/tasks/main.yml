@@ -1,0 +1,16 @@
+---
+- name: Install uv
+  ansible.builtin.shell: |
+    set -o pipefail
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.local/bin/uv"
+
+- name: Install uv tools
+  ansible.builtin.command: uv tool install {{ item }}
+  loop: "{{ uv_tools }}"
+  register: uv_tool
+  changed_when: "'already installed' not in (uv_tool.stderr | default(''))"
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"

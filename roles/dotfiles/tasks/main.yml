@@ -1,0 +1,70 @@
+---
+- name: Create per-machine git identity stub
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.gitconfig.local"
+    force: false
+    mode: "0644"
+    content: |
+      [user]
+          name = Your Name
+          email = you@example.com
+
+# Remove broken symlinks that point into the dotfiles repo (e.g. left behind
+# when a package moved location). Only dangling links are touched — `find -L`
+# resolves valid links to their target's type, so they never match `-type l`.
+- name: Remove stale dotfile symlinks from a previous layout
+  ansible.builtin.shell: |
+    changed=0
+    for root in "$HOME/.config" "$HOME/.cargo" "$HOME/.local"; do
+      [ -d "$root" ] || continue
+      while IFS= read -r link; do
+        readlink "$link" | grep -qE '(^|/)\.dotfiles/' && { rm -f "$link"; changed=1; }
+      done < <(find -L "$root" -type l 2>/dev/null)
+    done
+    while IFS= read -r link; do
+      readlink "$link" | grep -q '/\.dotfiles/' && { rm -f "$link"; changed=1; }
+    done < <(find -L "$HOME" -maxdepth 1 -type l 2>/dev/null)
+    [ "$changed" -eq 1 ] && echo changed || true
+  args:
+    executable: /bin/bash
+  register: stale_links
+  changed_when: "'changed' in stale_links.stdout"
+
+# Derive conflicts instead of enumerating them: for every file each package
+# would install, back up the target if it already exists as a real file.
+- name: Back up pre-existing real files that stow would replace
+  ansible.builtin.shell: |
+    set -o pipefail
+    changed=0
+    for pkg in "{{ playbook_dir }}/stow"/*/; do
+      while IFS= read -r f; do
+        rel="${f#"$pkg"}"
+        tgt="$HOME/$rel"
+        if [ -f "$tgt" ] && [ ! -L "$tgt" ]; then
+          mv "$tgt" "$tgt.bak"; changed=1
+        fi
+      done < <(find "$pkg" -type f -not -name '.stow-local-ignore')
+    done
+    [ "$changed" -eq 1 ] && echo changed || true
+  args:
+    executable: /bin/bash
+  register: dotfile_backup
+  changed_when: "'changed' in dotfile_backup.stdout"
+
+# Stow every package directory under stow/ — no list to maintain.
+- name: Discover stow packages
+  ansible.builtin.find:
+    paths: "{{ playbook_dir }}/stow"
+    file_type: directory
+    recurse: false
+  register: stow_pkgs
+
+- name: Stow dotfile packages
+  ansible.builtin.command: >
+    stow --dir={{ playbook_dir }}/stow --no-folding --restow --verbose
+    --target={{ ansible_env.HOME }} {{ item.path | basename }}
+  loop: "{{ stow_pkgs.files }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  register: stow_result
+  changed_when: "'LINK:' in stow_result.stderr or 'UNLINK:' in stow_result.stderr"

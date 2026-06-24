@@ -1,0 +1,85 @@
+---
+# Single source of truth for everything the playbook installs.
+# (Replaces the old `tools`, `crates`, and `packages` files.)
+
+# Set true to dist-upgrade the whole system during provisioning.
+apt_upgrade: false
+
+# WSL-only apt packages. WSLg already provides the PulseAudio server
+# (/mnt/wslg/PulseServer); these are the client tools that make audio (e.g.
+# Claude Code voice via sox's play/rec) actually work. Installed only on WSL.
+wsl_apt_packages:
+  - sox
+  - libsox-fmt-all
+  - pulseaudio-utils
+  - alsa-utils
+  - ffmpeg
+
+# Packages installed via apt. `gh` comes from the GitHub CLI repo and the
+# python3.12 packages from the deadsnakes PPA, both added in the packages role.
+apt_packages:
+  # compilers / linkers
+  - gcc
+  - g++
+  - make
+  - clang
+  - lld
+  # core CLI tools
+  - curl
+  - git
+  - apt-transport-https
+  - gzip
+  - tar
+  - unzip
+  - stow
+  - fd-find
+  - tmux
+  - fzf
+  - keychain
+  - luarocks
+  # github cli
+  - gh
+  # python
+  - python3.12
+  - python3.12-venv
+  - python3-dev
+  - python3-pip
+
+# Rust CLI tools installed with `cargo install`.
+cargo_crates:
+  - eza
+  - bat
+  - ripgrep
+  - zoxide
+  - hyperfine
+
+# Global npm packages (installed via nvm's node).
+npm_globals:
+  - tree-sitter-cli
+  - neovim
+
+# CLI applications installed with `uv tool install` (the pipx replacement).
+# Only genuine command-line tools belong here. pynvim is a library, not a tool,
+# so it lives in neovim_provider_packages below instead.
+uv_tools: []
+
+# Packages installed into Neovim's dedicated uv venv (its Python provider).
+neovim_provider_packages:
+  - pynvim
+
+# Docker Engine, installed from Docker's official apt repo (not Docker Desktop).
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+# Add the provisioning user to the docker group (takes effect on next login).
+docker_add_user_to_group: true
+
+# Stow packages are NOT listed here — the dotfiles role stows every directory
+# under stow/ automatically, and backs up any conflicting real files first.
+
+# Neovim AppImage download URL.
+neovim_appimage_url: "https://github.com/neovim/neovim/releases/latest/download/nvim.appimage"

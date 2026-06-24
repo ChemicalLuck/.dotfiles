@@ -93,6 +93,13 @@ vim.g.maplocalleader = " "
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
 
+-- Python provider: use the uv-managed venv created by the dotfiles playbook
+-- (which installs pynvim there). Falls back to auto-detection if it's absent.
+local nvim_python = vim.fn.expand("~/.local/share/nvim/venv/bin/python3")
+if vim.fn.filereadable(nvim_python) == 1 then
+	vim.g.python3_host_prog = nvim_python
+end
+
 -- [[ Setting options ]]
 -- See `:help vim.opt`
 -- NOTE: You can change these options as you wish!
@@ -226,6 +233,16 @@ vim.opt.rtp:prepend(lazypath)
 --
 -- NOTE: Here is where you install your plugins.
 require("lazy").setup({
+
+	{
+		"greggh/claude-code.nvim",
+		dependencies = {
+			"nvim-lua/plenary.nvim", -- Required for git operations
+		},
+		config = function()
+			require("claude-code").setup()
+		end,
+	},
 	-- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
 	"tpope/vim-sleuth", -- Detect tabstop and shiftwidth automatically
 
@@ -237,6 +254,10 @@ require("lazy").setup({
 	--
 	--  This is equivalent to:
 	--    require('Comment').setup({})
+	--
+	{
+		"ledger/vim-ledger",
+	},
 
 	-- "gc" to comment visual regions/lines
 	{ "numToStr/Comment.nvim", opts = {} },
@@ -604,27 +625,34 @@ require("lazy").setup({
 					-- When you move your cursor, the highlights will be cleared (the second autocommand).
 					local client = vim.lsp.get_client_by_id(event.data.client_id)
 					if client and client.server_capabilities.documentHighlightProvider then
-						local highlight_augroup =
-							vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
-						vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-							buffer = event.buf,
-							group = highlight_augroup,
-							callback = vim.lsp.buf.document_highlight,
-						})
+						if client.name == "ts_ls" and vim.bo[event.buf].filetype == "liquid" then
+							client.server_capabilities.documentHighlightProvider = false
+						else
+							local highlight_augroup =
+								vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
+							vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+								buffer = event.buf,
+								group = highlight_augroup,
+								callback = vim.lsp.buf.document_highlight,
+							})
 
-						vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-							buffer = event.buf,
-							group = highlight_augroup,
-							callback = vim.lsp.buf.clear_references,
-						})
+							vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+								buffer = event.buf,
+								group = highlight_augroup,
+								callback = vim.lsp.buf.clear_references,
+							})
 
-						vim.api.nvim_create_autocmd("LspDetach", {
-							group = vim.api.nvim_create_augroup("kickstart-lsp-detach", { clear = true }),
-							callback = function(event2)
-								vim.lsp.buf.clear_references()
-								vim.api.nvim_clear_autocmds({ group = "kickstart-lsp-highlight", buffer = event2.buf })
-							end,
-						})
+							vim.api.nvim_create_autocmd("LspDetach", {
+								group = vim.api.nvim_create_augroup("kickstart-lsp-detach", { clear = true }),
+								callback = function(event2)
+									vim.lsp.buf.clear_references()
+									vim.api.nvim_clear_autocmds({
+										group = "kickstart-lsp-highlight",
+										buffer = event2.buf,
+									})
+								end,
+							})
+						end
 					end
 
 					-- The following autocommand is used to enable inlay hints in your
@@ -658,8 +686,6 @@ require("lazy").setup({
 			local servers = {
 				-- TypeScript / JavaScript
 				ts_ls = {},
-				eslint_d = {},
-				prettier = {},
 
 				-- Liquid
 				shopify_theme_ls = {
@@ -674,20 +700,12 @@ require("lazy").setup({
 				-- Python
 				ruff = {},
 
-				-- Go
-				gopls = {},
-
 				lua_ls = {
-					-- cmd = {...},
-					-- filetypes = { ...},
-					-- capabilities = {},
 					settings = {
 						Lua = {
 							completion = {
 								callSnippet = "Replace",
 							},
-							-- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-							-- diagnostics = { disable = { 'missing-fields' } },
 						},
 					},
 				},
@@ -713,11 +731,9 @@ require("lazy").setup({
 				handlers = {
 					function(server_name)
 						local server = servers[server_name] or {}
-						-- This handles overriding only values explicitly passed
-						-- by the server configuration above. Useful when disabling
-						-- certain features of an LSP (for example, turning off formatting for tsserver)
 						server.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
-						require("lspconfig")[server_name].setup(server)
+						vim.lsp.config(server_name, server)
+						vim.lsp.enable(server_name)
 					end,
 				},
 			})
@@ -1009,7 +1025,7 @@ require("lazy").setup({
 	--  Uncomment any of the lines below to enable them (you will need to restart nvim).
 	--
 	require("chemicalluck.plugins.indent_line"),
-	require("chemicalluck.plugins.lint"),
+	-- require("chemicalluck.plugins.lint"),
 	require("chemicalluck.plugins.neo-tree"),
 }, {
 	ui = {

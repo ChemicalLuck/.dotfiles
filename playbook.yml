@@ -1,0 +1,13 @@
+---
+- name: Provision dev environment
+  hosts: local
+  become: false
+  gather_facts: true
+  roles:
+    - packages   # apt packages, PPAs, GitHub CLI repo
+    - docker      # Docker Engine from Docker's official apt repo
+    - rust        # rustup, nightly toolchain, cargo crates
+    - node        # nvm, node, global npm packages
+    - uv          # uv + uv tools (must precede neovim, which uses uv)
+    - neovim      # AppImage install + uv-managed Python provider venv
+    - dotfiles    # stow packages + per-machine stubs

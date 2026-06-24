@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "defaultMode": "default"
+  },
+  "model": "opus[1m]",
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true,
+    "claude-mem@thedotmack": true
+  },
+  "extraKnownMarketplaces": {
+    "thedotmack": {
+      "source": {
+        "source": "github",
+        "repo": "thedotmack/claude-mem"
+      }
+    }
+  },
+  "effortLevel": "high",
+  "advisorModel": "opus",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
+  "verbose": true,
+  "voiceEnabled": true
+}

@@ -1,0 +1,15 @@
+# Per-machine identity (name/email) lives in ~/.gitconfig.local, which is not
+# tracked in this repo. The install script writes a stub there if it is missing.
+[include]
+	path = ~/.gitconfig.local
+[init]
+	defaultBranch = main
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
+[pull]
+	rebase = false
+[core]
+	autocrlf = false
+	eol = lf
+	editor = nvim

@@ -120,7 +120,7 @@ if ! shopt -oq posix; then
 fi
 
 # Misc ENV
-export EDITOR="/usr/bin/nvim"
+export EDITOR="$(command -v nvim || echo vi)"
 
 # fzf 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
@@ -129,7 +129,7 @@ export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_ALT_C_COMMAND="$FZF_DEFAULT_COMMAND – type d"
 
 # Bin paths
-export PATH="${PATH:+${PATH}:}~/.local/bin"
+export PATH="${PATH:+${PATH}:}$HOME/.local/bin"
 export PATH="${PATH:+${PATH}:}/usr/local/go/bin"
 
 # nvm
@@ -138,13 +138,18 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # keychain
-eval $(keychain -q --nogui --agents ssh --eval ~/.ssh/github_ed25519)
-source $HOME/.keychain/$HOSTNAME-sh
+if [ -f ~/.ssh/github_ed25519 ] && command -v keychain >/dev/null; then
+    eval "$(keychain -q --nogui --agents ssh --eval ~/.ssh/github_ed25519)"
+    [ -f "$HOME/.keychain/$HOSTNAME-sh" ] && source "$HOME/.keychain/$HOSTNAME-sh"
+fi
 
 # rust
-. "$HOME/.cargo/env"
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
-eval "$(zoxide init bash)"
+command -v zoxide >/dev/null && eval "$(zoxide init bash)"
 
 # Turso
-export PATH="/home/chem/.turso:$PATH"
+[ -d "$HOME/.turso" ] && export PATH="$HOME/.turso:$PATH"
+
+# Per-machine overrides (not tracked in git)
+[ -f ~/.bashrc.local ] && . ~/.bashrc.local

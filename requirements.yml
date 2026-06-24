@@ -1,0 +1,5 @@
+---
+# Ansible collections required by the playbook.
+# Installed by bootstrap.sh via: ansible-galaxy collection install -r requirements.yml
+collections:
+  - name: community.general

@@ -1,0 +1,26 @@
+---
+- name: Install rustup
+  ansible.builtin.shell: |
+    set -o pipefail
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/rustup"
+
+- name: Get current default toolchain
+  ansible.builtin.command: "{{ ansible_env.HOME }}/.cargo/bin/rustup default"
+  register: rustup_default
+  changed_when: false
+  failed_when: false
+
+- name: Set nightly as the default toolchain
+  ansible.builtin.command: "{{ ansible_env.HOME }}/.cargo/bin/rustup default nightly"
+  when: "'nightly' not in rustup_default.stdout"
+
+- name: Install cargo crates
+  community.general.cargo:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ cargo_crates }}"
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.PATH }}"
