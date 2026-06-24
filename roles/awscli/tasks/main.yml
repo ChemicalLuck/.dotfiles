@@ -1,0 +1,39 @@
+---
+- name: Check whether AWS CLI is installed
+  ansible.builtin.command: aws --version
+  register: awscli_installed
+  changed_when: false
+  failed_when: false
+
+- name: Install AWS CLI v2
+  when: awscli_installed.rc != 0
+  block:
+    - name: Create temporary download directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: awscli
+      register: awscli_tmpdir
+
+    - name: Download AWS CLI v2 installer
+      ansible.builtin.get_url:
+        url: "{{ awscli_installer_url }}"
+        dest: "{{ awscli_tmpdir.path }}/awscliv2.zip"
+        mode: "0644"
+
+    - name: Unpack AWS CLI v2 installer
+      ansible.builtin.unarchive:
+        src: "{{ awscli_tmpdir.path }}/awscliv2.zip"
+        dest: "{{ awscli_tmpdir.path }}"
+        remote_src: true
+
+    - name: Run AWS CLI v2 installer
+      become: true
+      ansible.builtin.command:
+        cmd: "{{ awscli_tmpdir.path }}/aws/install"
+        creates: /usr/local/bin/aws
+  always:
+    - name: Remove temporary download directory
+      ansible.builtin.file:
+        path: "{{ awscli_tmpdir.path }}"
+        state: absent
+      when: awscli_tmpdir.path is defined

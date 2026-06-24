@@ -18,6 +18,12 @@
     dest: /etc/apt/keyrings/docker.asc
     mode: "0644"
 
+- name: Remove stale deb822 Docker source (conflicts with docker.list)
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/docker.sources
+    state: absent
+
 - name: Add Docker apt repository
   become: true
   ansible.builtin.apt_repository:

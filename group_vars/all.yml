@@ -15,8 +15,9 @@ wsl_apt_packages:
   - alsa-utils
   - ffmpeg
 
-# Packages installed via apt. `gh` comes from the GitHub CLI repo and the
-# python3.12 packages from the deadsnakes PPA, both added in the packages role.
+# Packages installed via apt. `gh` comes from the GitHub CLI repo, `terraform`
+# from the HashiCorp repo, and the python3.12 packages from the deadsnakes PPA,
+# all added in the packages role.
 apt_packages:
   # compilers / linkers
   - gcc
@@ -39,6 +40,8 @@ apt_packages:
   - luarocks
   # github cli
   - gh
+  # hashicorp
+  - terraform
   # python
   - python3.12
   - python3.12-venv
@@ -77,6 +80,10 @@ docker_packages:
 
 # Add the provisioning user to the docker group (takes effect on next login).
 docker_add_user_to_group: true
+
+# AWS CLI v2, installed from AWS's official bundled installer. apt only ships
+# the deprecated v1 (`awscli`), so the awscli role uses this zip instead.
+awscli_installer_url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
 
 # Stow packages are NOT listed here — the dotfiles role stows every directory
 # under stow/ automatically, and backs up any conflicting real files first.

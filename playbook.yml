@@ -4,8 +4,9 @@
   become: false
   gather_facts: true
   roles:
-    - packages   # apt packages, PPAs, GitHub CLI repo
+    - packages   # apt packages, PPAs, GitHub CLI + HashiCorp repos
     - docker      # Docker Engine from Docker's official apt repo
+    - awscli      # AWS CLI v2 from AWS's official bundled installer
     - rust        # rustup, nightly toolchain, cargo crates
     - node        # nvm, node, global npm packages
     - uv          # uv + uv tools (must precede neovim, which uses uv)
