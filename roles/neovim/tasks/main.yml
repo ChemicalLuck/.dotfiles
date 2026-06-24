@@ -18,6 +18,12 @@
       args:
         chdir: /tmp
 
+    - name: Remove any stale Neovim install
+      become: true
+      ansible.builtin.file:
+        path: /opt/nvim
+        state: absent
+
     - name: Move Neovim into /opt
       become: true
       ansible.builtin.command: mv /tmp/squashfs-root /opt/nvim
@@ -30,6 +36,7 @@
         src: /opt/nvim/AppRun
         dest: /usr/local/bin/nvim
         state: link
+        force: true
 
     - name: Remove the downloaded AppImage
       ansible.builtin.file:

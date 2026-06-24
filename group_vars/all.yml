@@ -82,4 +82,4 @@ docker_add_user_to_group: true
 # under stow/ automatically, and backs up any conflicting real files first.
 
 # Neovim AppImage download URL.
-neovim_appimage_url: "https://github.com/neovim/neovim/releases/latest/download/nvim.appimage"
+neovim_appimage_url: "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage"

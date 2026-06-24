@@ -16,10 +16,28 @@
       - apt-transport-https
     state: present
 
+- name: Remove legacy deadsnakes PPA source (key in trusted.gpg)
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/ppa_deadsnakes_ppa_noble.list
+    state: absent
+
+- name: Install deadsnakes PPA keyring
+  become: true
+  ansible.builtin.get_url:
+    url: >-
+      https://keyserver.ubuntu.com/pks/lookup?op=get&options=mr&search=0xF23C5A6CF475977595C89F51BA6932366A755776
+    dest: /etc/apt/keyrings/deadsnakes.asc
+    mode: "0644"
+
 - name: Add deadsnakes PPA (Python 3.12)
   become: true
   ansible.builtin.apt_repository:
-    repo: ppa:deadsnakes/ppa
+    repo: >-
+      deb [signed-by=/etc/apt/keyrings/deadsnakes.asc]
+      http://ppa.launchpad.net/deadsnakes/ppa/ubuntu
+      {{ ansible_distribution_release }} main
+    filename: deadsnakes
     state: present
 
 - name: Install GitHub CLI keyring
@@ -33,6 +51,14 @@
   ansible.builtin.command: dpkg --print-architecture
   register: deb_arch
   changed_when: false
+
+- name: Remove stale GitHub CLI source entries (wrong keyring path)
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/apt/sources.list.d/github-cli.list
+    regexp: '/etc/apt/keyrings/githubcli-archive-keyring\.gpg'
+    state: absent
+  failed_when: false
 
 - name: Add GitHub CLI apt repository
   become: true

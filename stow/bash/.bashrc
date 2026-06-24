@@ -151,5 +151,19 @@ command -v zoxide >/dev/null && eval "$(zoxide init bash)"
 # Turso
 [ -d "$HOME/.turso" ] && export PATH="$HOME/.turso:$PATH"
 
+# uv (adds ~/.local/bin to PATH)
+[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+[ -d "$BUN_INSTALL/bin" ] && export PATH="$BUN_INSTALL/bin:$PATH"
+
+# opencode
+[ -d "$HOME/.opencode/bin" ] && export PATH="$HOME/.opencode/bin:$PATH"
+
+# claude
+export CLAUDE_CODE_ENABLE_TELEMETRY=0
+export DISABLE_TELEMETRY=1
+
 # Per-machine overrides (not tracked in git)
 [ -f ~/.bashrc.local ] && . ~/.bashrc.local
