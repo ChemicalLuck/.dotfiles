@@ -31,8 +31,20 @@
 
 # `cargo install --list` prints "<crate> v<version>:" followed by an indented
 # line per binary, so the unindented lines are the crate names.
+#
+# --locked builds against the Cargo.lock the crate was published with, instead
+# of re-resolving every transitive dependency to the newest semver-compatible
+# release. Without it a broken upstream release breaks the install: eza 0.23.5
+# depends on palette 0.7.5, which asks for palette_derive "0.7.5" — a caret
+# requirement that also accepts 0.7.7, whose macros emit code for a crate
+# layout 0.7.5 doesn't have, so the build dies with dozens of E0433s. eza's
+# published lockfile pins palette_derive 0.7.6 and builds cleanly.
+#
+# Anything added to cargo_crates must therefore publish a Cargo.lock. Binary
+# crates normally do; if one doesn't, cargo says so plainly rather than
+# silently building something else.
 - name: Install cargo crates
-  ansible.builtin.command: cargo install {{ item }}
+  ansible.builtin.command: cargo install --locked {{ item }}
   loop: "{{ cargo_crates }}"
   when: item not in (cargo_installed.stdout | regex_findall('^(\\S+) v[0-9]', multiline=True))
   environment:
