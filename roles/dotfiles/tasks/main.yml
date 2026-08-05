@@ -1,7 +1,7 @@
 ---
 - name: Create per-machine git identity stub
   ansible.builtin.copy:
-    dest: "{{ ansible_env.HOME }}/.gitconfig.local"
+    dest: "{{ ansible_facts['env'].HOME }}/.gitconfig.local"
     force: false
     mode: "0644"
     content: |
@@ -62,7 +62,7 @@
 - name: Stow dotfile packages
   ansible.builtin.command: >
     stow --dir={{ playbook_dir }}/stow --no-folding --restow --verbose
-    --target={{ ansible_env.HOME }} {{ item.path | basename }}
+    --target={{ ansible_facts['env'].HOME }} {{ item.path | basename }}
   loop: "{{ stow_pkgs.files }}"
   loop_control:
     label: "{{ item.path | basename }}"

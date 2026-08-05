@@ -22,9 +22,9 @@ Tested on **Debian/Ubuntu** and **Alpine**. Arch and Fedora/RHEL have
 best-effort package lists but haven't been run end to end.
 
 Nothing in `roles/` names a package manager directly — the roles ask for
-`ansible_os_family` and look the answer up. Two mechanisms carry that:
+`ansible_facts['os_family']` and look the answer up. Two mechanisms carry that:
 
-- **`*_by_family` maps** in `group_vars/all.yml`, keyed by `ansible_os_family`
+- **`*_by_family` maps** in `group_vars/all.yml`, keyed by `ansible_facts['os_family']`
   (`Debian`, `Alpine`, `Archlinux`, `RedHat`, ...), for package *names*.
   Installs go through `ansible.builtin.package`, which dispatches to apt, apk,
   pacman or dnf on its own.

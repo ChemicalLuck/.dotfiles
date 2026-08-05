@@ -10,17 +10,17 @@
 - name: Create the Neovim Python provider venv
   ansible.builtin.command: >
     uv venv --python {{ neovim_provider_python }}
-    {{ ansible_env.HOME }}/.local/share/nvim/venv
+    {{ ansible_facts['env'].HOME }}/.local/share/nvim/venv
   args:
-    creates: "{{ ansible_env.HOME }}/.local/share/nvim/venv/bin/python3"
+    creates: "{{ ansible_facts['env'].HOME }}/.local/share/nvim/venv/bin/python3"
   environment:
-    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_facts['env'].HOME }}/.local/bin:{{ ansible_facts['env'].PATH }}"
 
 - name: Install Python provider packages into the venv
   ansible.builtin.command: >
-    uv pip install --python {{ ansible_env.HOME }}/.local/share/nvim/venv/bin/python3
+    uv pip install --python {{ ansible_facts['env'].HOME }}/.local/share/nvim/venv/bin/python3
     {{ neovim_provider_packages | join(' ') }}
   environment:
-    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_facts['env'].HOME }}/.local/bin:{{ ansible_facts['env'].PATH }}"
   register: nvim_provider
   changed_when: "'Installed' in (nvim_provider.stderr | default(''))"

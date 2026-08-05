@@ -6,7 +6,7 @@
   vars:
     params:
       files:
-        - "{{ ansible_os_family }}.yml"
+        - "{{ ansible_facts['os_family'] }}.yml"
         - default.yml
       paths:
         - "{{ role_path }}/tasks"
@@ -20,8 +20,8 @@
 - name: Install WSL audio packages
   become: true
   ansible.builtin.package:
-    name: "{{ wsl_packages_by_family[ansible_os_family] }}"
+    name: "{{ wsl_packages_by_family[ansible_facts['os_family']] }}"
     state: present
   when:
-    - "'microsoft' in ansible_kernel | lower"
-    - ansible_os_family in wsl_packages_by_family
+    - "'microsoft' in ansible_facts['kernel'] | lower"
+    - ansible_facts['os_family'] in wsl_packages_by_family

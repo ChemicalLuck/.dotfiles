@@ -8,10 +8,10 @@
     - name: Fail early on a distro the playbook has no package names for
       ansible.builtin.assert:
         that:
-          - ansible_os_family in system_packages_by_family
+          - ansible_facts['os_family'] in system_packages_by_family
         fail_msg: >-
-          No package-name map for os_family '{{ ansible_os_family }}'
-          ({{ ansible_distribution }} {{ ansible_distribution_version }}).
+          No package-name map for os_family '{{ ansible_facts['os_family'] }}'
+          ({{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}).
           Add an entry for it to system_packages_by_family in
           group_vars/all.yml — plus the matching docker_/node_/neovim_/awscli_
           maps for the roles you want — and re-run.

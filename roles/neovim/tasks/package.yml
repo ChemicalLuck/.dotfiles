@@ -4,16 +4,16 @@
 - name: Fail early when Neovim package names are unknown for this distro
   ansible.builtin.assert:
     that:
-      - ansible_os_family in neovim_packages_by_family
+      - ansible_facts['os_family'] in neovim_packages_by_family
     fail_msg: >-
-      No neovim_packages_by_family entry for '{{ ansible_os_family }}'.
+      No neovim_packages_by_family entry for '{{ ansible_facts['os_family'] }}'.
       Add one to group_vars/all.yml, or set neovim_install_method: appimage.
     quiet: true
 
 - name: Install Neovim
   become: true
   ansible.builtin.package:
-    name: "{{ neovim_packages_by_family[ansible_os_family] }}"
+    name: "{{ neovim_packages_by_family[ansible_facts['os_family']] }}"
     state: present
 
 # An AppImage install from a previous run would shadow the packaged nvim on

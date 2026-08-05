@@ -35,7 +35,7 @@
     - name: Remove legacy deadsnakes PPA source (key in trusted.gpg)
       become: true
       ansible.builtin.file:
-        path: "/etc/apt/sources.list.d/ppa_deadsnakes_ppa_{{ ansible_distribution_release }}.list"
+        path: "/etc/apt/sources.list.d/ppa_deadsnakes_ppa_{{ ansible_facts['distribution_release'] }}.list"
         state: absent
 
     - name: Install deadsnakes PPA keyring
@@ -52,7 +52,7 @@
         repo: >-
           deb [signed-by=/etc/apt/keyrings/deadsnakes.asc]
           http://ppa.launchpad.net/deadsnakes/ppa/ubuntu
-          {{ ansible_distribution_release }} main
+          {{ ansible_facts['distribution_release'] }} main
         filename: deadsnakes
         state: present
 
@@ -62,7 +62,7 @@
     repo: >-
       deb [signed-by=/etc/apt/keyrings/deadsnakes.asc]
       http://ppa.launchpad.net/deadsnakes/ppa/ubuntu
-      {{ ansible_distribution_release }} main
+      {{ ansible_facts['distribution_release'] }} main
     filename: deadsnakes
     state: absent
   when: not (deadsnakes_enabled | bool)
@@ -115,7 +115,7 @@
     repo: >-
       deb [arch={{ deb_arch.stdout }}
       signed-by=/etc/apt/keyrings/hashicorp.asc]
-      https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main
+      https://apt.releases.hashicorp.com {{ ansible_facts['distribution_release'] }} main
     filename: hashicorp
     state: present
 
