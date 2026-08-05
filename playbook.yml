@@ -3,12 +3,26 @@
   hosts: local
   become: false
   gather_facts: true
+
+  pre_tasks:
+    - name: Fail early on a distro the playbook has no package names for
+      ansible.builtin.assert:
+        that:
+          - ansible_os_family in system_packages_by_family
+        fail_msg: >-
+          No package-name map for os_family '{{ ansible_os_family }}'
+          ({{ ansible_distribution }} {{ ansible_distribution_version }}).
+          Add an entry for it to system_packages_by_family in
+          group_vars/all.yml — plus the matching docker_/node_/neovim_/awscli_
+          maps for the roles you want — and re-run.
+        quiet: true
+
   roles:
-    - packages   # apt packages, PPAs, GitHub CLI + HashiCorp repos
-    - docker      # Docker Engine from Docker's official apt repo
-    - awscli      # AWS CLI v2 from AWS's official bundled installer
+    - packages    # system packages (+ third-party repos on Debian/Ubuntu)
+    - docker      # Docker Engine, from Docker's repo or the distro's packages
+    - awscli      # AWS CLI v2, from AWS's bundled installer or the distro
     - rust        # rustup, nightly toolchain, cargo crates
-    - node        # nvm, node, global npm packages
+    - node        # node via nvm (glibc) or the distro (musl), global npm packages
     - uv          # uv + uv tools (must precede neovim, which uses uv)
-    - neovim      # AppImage install + uv-managed Python provider venv
+    - neovim      # AppImage or distro package + uv-managed Python provider venv
     - dotfiles    # stow packages + per-machine stubs

@@ -1,0 +1,11 @@
+---
+# nvm's node lives under $HOME, so global installs need no privileges.
+- name: Install global npm packages
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    npm install -g {{ npm_globals | join(' ') }}
+  args:
+    executable: /bin/bash
+  register: npm_global
+  changed_when: "'added' in npm_global.stdout or 'changed' in npm_global.stdout"

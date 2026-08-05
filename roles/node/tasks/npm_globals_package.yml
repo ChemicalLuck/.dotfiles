@@ -1,0 +1,8 @@
+---
+# The distro's node has a root-owned global prefix (/usr/lib/node_modules),
+# so `npm install -g` needs privileges here.
+- name: Install global npm packages
+  become: true
+  ansible.builtin.command: npm install -g {{ npm_globals | join(' ') }}
+  register: npm_global
+  changed_when: "'added' in npm_global.stdout or 'changed' in npm_global.stdout"

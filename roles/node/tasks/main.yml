@@ -1,29 +1,6 @@
 ---
-# nvm is a shell function, so these steps source it explicitly rather than
-# relying on a module. The `creates` / changed_when guards keep them idempotent.
-- name: Install nvm
-  ansible.builtin.shell: |
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-  args:
-    executable: /bin/bash
-    creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
-
-- name: Install the latest Node via nvm
-  ansible.builtin.shell: |
-    export NVM_DIR="$HOME/.nvm"
-    . "$NVM_DIR/nvm.sh"
-    nvm install node
-  args:
-    executable: /bin/bash
-  register: nvm_node
-  changed_when: "'is already installed' not in nvm_node.stdout"
+- name: Install Node
+  ansible.builtin.include_tasks: "{{ node_install_method }}.yml"
 
 - name: Install global npm packages
-  ansible.builtin.shell: |
-    export NVM_DIR="$HOME/.nvm"
-    . "$NVM_DIR/nvm.sh"
-    npm install -g {{ npm_globals | join(' ') }}
-  args:
-    executable: /bin/bash
-  register: npm_global
-  changed_when: "'added' in npm_global.stdout or 'changed' in npm_global.stdout"
+  ansible.builtin.include_tasks: "npm_globals_{{ node_install_method }}.yml"
