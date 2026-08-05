@@ -56,16 +56,22 @@ if ! command -v ansible-playbook >/dev/null 2>&1; then
 fi
 
 # --- collections ------------------------------------------------------------
-# Distros that bundle Ansible's collections into site-packages (Alpine, Fedora)
-# ship them without a MANIFEST.json, so ansible-galaxy reads their version as
-# '*'. That breaks both routes: `--upgrade` feeds them to the dependency
-# resolver, which aborts with "invalid semantic version '*'", while a plain
-# install treats the requirement as satisfied and does nothing.
+# --force, not a plain install, and not --upgrade.
 #
-# Neither is fatal — the bundled collections cover what this playbook uses — so
-# try for a current copy, then fall back to whatever is already on the system.
+# A distro can leave a collection directory present but unusable. Alpine's
+# `ansible-pyc` package ships only compiled bytecode — the .py sources live in
+# the `ansible` package — so site-packages ends up holding a community.general
+# whose plugins/modules/ contains nothing but __pycache__. Ansible's loader
+# only looks for .py, so every module in it is invisible and roles die at load
+# time with "couldn't resolve module/action".
+#
+# Against that, a plain install sees the directory, reports "already installed"
+# and leaves it broken; --upgrade feeds the version-less collection to the
+# dependency resolver, which aborts with "invalid semantic version '*'".
+# --force skips both traps and always writes a complete copy to
+# ~/.ansible/collections, which takes precedence over site-packages.
 echo "Installing required Ansible collections..."
-if ansible-galaxy collection install -r requirements.yml --upgrade; then
+if ansible-galaxy collection install -r requirements.yml --force; then
     :
 elif ansible-galaxy collection install -r requirements.yml; then
     :

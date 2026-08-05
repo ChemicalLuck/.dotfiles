@@ -109,6 +109,21 @@ the repo root: `stow --dir=stow --no-folding --restow --target="$HOME" <pkg>`.
   has a `.../community` line, or run `setup-apkrepos -c -1`.
 - **`sudo: not found`** — Alpine ships neither `sudo` nor `doas`. Run
   `bootstrap.sh` as root, or `apk add sudo` first.
+- **`couldn't resolve module/action 'community.general.<x>'`**, with no `TASK`
+  output at all — role files are parsed up front, so this aborts the run before
+  anything executes. It means the installed `community.general` has no usable
+  modules. Alpine's `ansible-pyc` package ships only compiled bytecode (the
+  `.py` sources are in the `ansible` package), leaving a collection whose
+  `plugins/modules/` holds nothing but `__pycache__`; Ansible's loader only
+  looks for `.py`. `bootstrap.sh` fixes this with `--force`, which writes a
+  complete copy to `~/.ansible/collections` — that path wins over
+  site-packages. To confirm what you have:
+  ```sh
+  ls "$(python3 -c 'import ansible,os;print(os.path.dirname(os.path.dirname(ansible.__file__)))')"/ansible_collections/community/general/plugins/modules | wc -l
+  ```
+  A real collection has thousands of entries. Note `ansible-doc` exits 0 even
+  when it finds nothing, so `ansible-doc ... && echo present` will lie to you —
+  read its output, not its exit status.
 
 ### Clipboard
 On WSL2, install [win32yank](https://github.com/equalsraf/win32yank) in order for the clipboard to work between WSL2 and Windows.
