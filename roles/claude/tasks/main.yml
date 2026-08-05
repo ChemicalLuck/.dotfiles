@@ -6,14 +6,14 @@
 - name: Install Claude Code runtime dependencies
   become: true
   ansible.builtin.package:
-    name: "{{ claude_packages_by_family[ansible_os_family] }}"
+    name: "{{ claude_packages_by_family[ansible_facts['os_family']] }}"
     state: present
-  when: ansible_os_family in claude_packages_by_family
+  when: ansible_facts['os_family'] in claude_packages_by_family
 
 - name: Install Claude Code
   ansible.builtin.shell:
     executable: /bin/bash
-    creates: "{{ ansible_env.HOME }}/.local/bin/claude"
+    creates: "{{ ansible_facts['env'].HOME }}/.local/bin/claude"
     cmd: |
       set -o pipefail
       curl -fsSL https://claude.ai/install.sh | bash -s {{ claude_channel }}
@@ -23,7 +23,7 @@
   register: claude_version
   changed_when: false
   environment:
-    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_facts['env'].HOME }}/.local/bin:{{ ansible_facts['env'].PATH }}"
 
 - name: Report the installed version
   ansible.builtin.debug:

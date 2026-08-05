@@ -4,14 +4,14 @@
 - name: Fail early when Node package names are unknown for this distro
   ansible.builtin.assert:
     that:
-      - ansible_os_family in node_packages_by_family
+      - ansible_facts['os_family'] in node_packages_by_family
     fail_msg: >-
-      No node_packages_by_family entry for '{{ ansible_os_family }}'.
+      No node_packages_by_family entry for '{{ ansible_facts['os_family'] }}'.
       Add one to group_vars/all.yml, or set node_install_method: nvm.
     quiet: true
 
 - name: Install Node and npm
   become: true
   ansible.builtin.package:
-    name: "{{ node_packages_by_family[ansible_os_family] }}"
+    name: "{{ node_packages_by_family[ansible_facts['os_family']] }}"
     state: present

@@ -5,7 +5,7 @@
 - name: Note that this family has no repository setup
   ansible.builtin.debug:
     msg: >-
-      No repository setup defined for os_family '{{ ansible_os_family }}';
+      No repository setup defined for os_family '{{ ansible_facts['os_family'] }}';
       installing only what its own repositories provide. Third-party tools
       (GitHub CLI, Terraform) may be missing unless the distro ships them.
 
@@ -16,13 +16,13 @@
     state: latest
   when:
     - system_upgrade | bool
-    - ansible_pkg_mgr in ['dnf', 'dnf5', 'yum', 'zypper']
+    - ansible_facts['pkg_mgr'] in ['dnf', 'dnf5', 'yum', 'zypper']
 
 - name: Warn that system_upgrade is unsupported here
   ansible.builtin.debug:
     msg: >-
       system_upgrade is set but no upgrade path is defined for
-      '{{ ansible_pkg_mgr }}' — upgrade this machine yourself.
+      '{{ ansible_facts['pkg_mgr'] }}' — upgrade this machine yourself.
   when:
     - system_upgrade | bool
-    - ansible_pkg_mgr not in ['dnf', 'dnf5', 'yum', 'zypper']
+    - ansible_facts['pkg_mgr'] not in ['dnf', 'dnf5', 'yum', 'zypper']

@@ -2,9 +2,9 @@
 - name: Fail early when Docker package names are unknown for this distro
   ansible.builtin.assert:
     that:
-      - ansible_os_family in docker_packages_by_family
+      - ansible_facts['os_family'] in docker_packages_by_family
     fail_msg: >-
-      No docker_packages_by_family entry for '{{ ansible_os_family }}'.
+      No docker_packages_by_family entry for '{{ ansible_facts['os_family'] }}'.
       Add one to group_vars/all.yml.
     quiet: true
 
@@ -15,7 +15,7 @@
   vars:
     params:
       files:
-        - "{{ ansible_os_family }}.yml"
+        - "{{ ansible_facts['os_family'] }}.yml"
         - default.yml
       paths:
         - "{{ role_path }}/tasks"
@@ -23,13 +23,13 @@
 - name: Install Docker Engine
   become: true
   ansible.builtin.package:
-    name: "{{ docker_packages_by_family[ansible_os_family] }}"
+    name: "{{ docker_packages_by_family[ansible_facts['os_family']] }}"
     state: present
 
 - name: Add user to the docker group
   become: true
   ansible.builtin.user:
-    name: "{{ ansible_user_id }}"
+    name: "{{ ansible_facts['user_id'] }}"
     groups: docker
     append: true
   when: docker_add_user_to_group | bool
@@ -44,4 +44,4 @@
     state: started
   when:
     - docker_manage_service | bool
-    - ansible_service_mgr in ['systemd', 'openrc', 'sysvinit', 'launchd', 'runit']
+    - ansible_facts['service_mgr'] in ['systemd', 'openrc', 'sysvinit', 'launchd', 'runit']

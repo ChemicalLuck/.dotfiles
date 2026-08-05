@@ -5,16 +5,16 @@
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   args:
     executable: /bin/bash
-    creates: "{{ ansible_env.HOME }}/.cargo/bin/rustup"
+    creates: "{{ ansible_facts['env'].HOME }}/.cargo/bin/rustup"
 
 - name: Get current default toolchain
-  ansible.builtin.command: "{{ ansible_env.HOME }}/.cargo/bin/rustup default"
+  ansible.builtin.command: "{{ ansible_facts['env'].HOME }}/.cargo/bin/rustup default"
   register: rustup_default
   changed_when: false
   failed_when: false
 
 - name: Set nightly as the default toolchain
-  ansible.builtin.command: "{{ ansible_env.HOME }}/.cargo/bin/rustup default nightly"
+  ansible.builtin.command: "{{ ansible_facts['env'].HOME }}/.cargo/bin/rustup default nightly"
   when: "'nightly' not in rustup_default.stdout"
 
 # Driven through cargo itself rather than community.general.cargo: distro
@@ -27,7 +27,7 @@
   register: cargo_installed
   changed_when: false
   environment:
-    PATH: "{{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_facts['env'].HOME }}/.cargo/bin:{{ ansible_facts['env'].PATH }}"
 
 # `cargo install --list` prints "<crate> v<version>:" followed by an indented
 # line per binary, so the unindented lines are the crate names.
@@ -36,4 +36,4 @@
   loop: "{{ cargo_crates }}"
   when: item not in (cargo_installed.stdout | regex_findall('^(\\S+) v[0-9]', multiline=True))
   environment:
-    PATH: "{{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_facts['env'].HOME }}/.cargo/bin:{{ ansible_facts['env'].PATH }}"

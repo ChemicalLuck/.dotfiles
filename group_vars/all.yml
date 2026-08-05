@@ -2,7 +2,7 @@
 # Single source of truth for everything the playbook installs.
 #
 # Package NAMES differ between distros, so anything installed by the system
-# package manager lives in a `*_by_family` map keyed by `ansible_os_family`
+# package manager lives in a `*_by_family` map keyed by `ansible_facts['os_family']`
 # ("Debian", "Alpine", "Archlinux", "RedHat", ...). To support a new distro,
 # add a key to those maps — the roles themselves need no changes.
 #
@@ -81,11 +81,11 @@ system_packages_by_family:
 # distro's family has an entry above before any role gets this far.
 system_packages: >-
   {{ system_packages_common
-     + (system_packages_by_family[ansible_os_family] | default([])) }}
+     + (system_packages_by_family[ansible_facts['os_family']] | default([])) }}
 
 # Ubuntu-only: the deadsnakes PPA and the Python it provides. Debian proper and
 # every other distro use the system python3 from the lists above.
-deadsnakes_enabled: "{{ ansible_distribution == 'Ubuntu' }}"
+deadsnakes_enabled: "{{ ansible_facts['distribution'] == 'Ubuntu' }}"
 deadsnakes_packages:
   - python3.12
   - python3.12-venv
@@ -121,7 +121,7 @@ cargo_crates:
 
 # Node: nvm ships glibc-only prebuilt binaries, so musl distros install the
 # distro's own nodejs instead. Override to force either method.
-node_install_method: "{{ 'package' if ansible_os_family == 'Alpine' else 'nvm' }}"
+node_install_method: "{{ 'package' if ansible_facts['os_family'] == 'Alpine' else 'nvm' }}"
 node_packages_by_family:
   Debian: [nodejs, npm]
   Alpine: [nodejs, npm]
@@ -144,7 +144,7 @@ uv_tools: []
 
 # The upstream AppImage is linked against glibc, so musl distros install the
 # distro package instead. Override to force either method.
-neovim_install_method: "{{ 'package' if ansible_os_family == 'Alpine' else 'appimage' }}"
+neovim_install_method: "{{ 'package' if ansible_facts['os_family'] == 'Alpine' else 'appimage' }}"
 neovim_appimage_url: "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage"
 neovim_packages_by_family:
   Debian: [neovim]
@@ -198,7 +198,7 @@ docker_manage_service: true
 
 # AWS's official bundled installer is glibc-only, so musl distros use the distro
 # package. Debian/Ubuntu can't: apt only ships the deprecated v1 (`awscli`).
-awscli_install_method: "{{ 'package' if ansible_os_family == 'Alpine' else 'bundle' }}"
+awscli_install_method: "{{ 'package' if ansible_facts['os_family'] == 'Alpine' else 'bundle' }}"
 awscli_installer_url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
 awscli_packages_by_family:
   Alpine: [aws-cli]

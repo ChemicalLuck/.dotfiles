@@ -4,14 +4,14 @@
 - name: Fail early when AWS CLI package names are unknown for this distro
   ansible.builtin.assert:
     that:
-      - ansible_os_family in awscli_packages_by_family
+      - ansible_facts['os_family'] in awscli_packages_by_family
     fail_msg: >-
-      No awscli_packages_by_family entry for '{{ ansible_os_family }}'.
+      No awscli_packages_by_family entry for '{{ ansible_facts['os_family'] }}'.
       Add one to group_vars/all.yml, or set awscli_install_method: bundle.
     quiet: true
 
 - name: Install AWS CLI v2
   become: true
   ansible.builtin.package:
-    name: "{{ awscli_packages_by_family[ansible_os_family] }}"
+    name: "{{ awscli_packages_by_family[ansible_facts['os_family']] }}"
     state: present

@@ -4,5 +4,5 @@
 - name: Use the distro's own Docker packages
   ansible.builtin.debug:
     msg: >-
-      Installing Docker from the {{ ansible_distribution }} repositories
-      ({{ docker_packages_by_family[ansible_os_family] | join(', ') }}).
+      Installing Docker from the {{ ansible_facts['distribution'] }} repositories
+      ({{ docker_packages_by_family[ansible_facts['os_family']] | join(', ') }}).
