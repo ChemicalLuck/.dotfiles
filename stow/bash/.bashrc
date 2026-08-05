@@ -122,11 +122,17 @@ fi
 # Misc ENV
 export EDITOR="$(command -v nvim || echo vi)"
 
-# fzf 
+# fzf
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
-export FZF_DEFAULT_COMMAND="fd --hidden"
-export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-export FZF_ALT_C_COMMAND="$FZF_DEFAULT_COMMAND – type d"
+# Debian/Ubuntu ship the binary as `fdfind` (the `fd` name is taken); Alpine,
+# Arch and Fedora call it `fd`.
+_fd_bin="$(command -v fd || command -v fdfind)"
+if [ -n "$_fd_bin" ]; then
+    export FZF_DEFAULT_COMMAND="$_fd_bin --hidden"
+    export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+    export FZF_ALT_C_COMMAND="$FZF_DEFAULT_COMMAND --type d"
+fi
+unset _fd_bin
 
 # Bin paths
 export PATH="${PATH:+${PATH}:}$HOME/.local/bin"

@@ -1,0 +1,28 @@
+---
+# Fallback for families with no dedicated prep file (Archlinux, RedHat, ...).
+# The generic `package` module refreshes metadata on its own where the
+# underlying manager needs it, so there is nothing to do here but the upgrade.
+- name: Note that this family has no repository setup
+  ansible.builtin.debug:
+    msg: >-
+      No repository setup defined for os_family '{{ ansible_os_family }}';
+      installing only what its own repositories provide. Third-party tools
+      (GitHub CLI, Terraform) may be missing unless the distro ships them.
+
+- name: Upgrade all system packages
+  become: true
+  ansible.builtin.package:
+    name: '*'
+    state: latest
+  when:
+    - system_upgrade | bool
+    - ansible_pkg_mgr in ['dnf', 'dnf5', 'yum', 'zypper']
+
+- name: Warn that system_upgrade is unsupported here
+  ansible.builtin.debug:
+    msg: >-
+      system_upgrade is set but no upgrade path is defined for
+      '{{ ansible_pkg_mgr }}' — upgrade this machine yourself.
+  when:
+    - system_upgrade | bool
+    - ansible_pkg_mgr not in ['dnf', 'dnf5', 'yum', 'zypper']

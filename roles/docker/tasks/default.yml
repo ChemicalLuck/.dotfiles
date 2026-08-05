@@ -1,0 +1,8 @@
+---
+# Nothing to add: on Alpine, Arch, Fedora and friends Docker Engine comes from
+# the distro's own repositories, already enabled by the packages role.
+- name: Use the distro's own Docker packages
+  ansible.builtin.debug:
+    msg: >-
+      Installing Docker from the {{ ansible_distribution }} repositories
+      ({{ docker_packages_by_family[ansible_os_family] | join(', ') }}).

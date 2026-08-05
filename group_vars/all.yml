@@ -1,54 +1,117 @@
 ---
 # Single source of truth for everything the playbook installs.
-# (Replaces the old `tools`, `crates`, and `packages` files.)
+#
+# Package NAMES differ between distros, so anything installed by the system
+# package manager lives in a `*_by_family` map keyed by `ansible_os_family`
+# ("Debian", "Alpine", "Archlinux", "RedHat", ...). To support a new distro,
+# add a key to those maps — the roles themselves need no changes.
+#
+# Tested on Debian/Ubuntu and Alpine. The other families are best-effort
+# starting points.
 
-# Set true to dist-upgrade the whole system during provisioning.
-apt_upgrade: false
+# Set true to upgrade every system package during provisioning.
+system_upgrade: false
 
-# WSL-only apt packages. WSLg already provides the PulseAudio server
-# (/mnt/wslg/PulseServer); these are the client tools that make audio (e.g.
-# Claude Code voice via sox's play/rec) actually work. Installed only on WSL.
-wsl_apt_packages:
-  - sox
-  - libsox-fmt-all
-  - pulseaudio-utils
-  - alsa-utils
-  - ffmpeg
+# ---------------------------------------------------------------------------
+# System packages
+# ---------------------------------------------------------------------------
 
-# Packages installed via apt. `gh` comes from the GitHub CLI repo, `terraform`
-# from the HashiCorp repo, and the python3.12 packages from the deadsnakes PPA,
-# all added in the packages role.
-apt_packages:
-  # compilers / linkers
-  - gcc
-  - g++
-  - make
+# Names spelled identically on every supported family.
+system_packages_common:
+  - bash          # the dotfiles role's scripts need a real bash, not ash
   - clang
-  - lld
-  # core CLI tools
   - curl
-  - git
-  - apt-transport-https
-  - gzip
-  - tar
-  - unzip
-  - stow
-  - fd-find
-  - tmux
   - fzf
+  - git
+  - gzip
   - keychain
+  - lld
   - luarocks
-  # github cli
-  - gh
-  # hashicorp
-  - terraform
-  # python
+  - make
+  - stow
+  - tar
+  - tmux
+  - unzip
+
+# Family-specific names and extras, merged with the list above.
+system_packages_by_family:
+  Debian:
+    - gcc
+    - g++
+    - apt-transport-https
+    - ca-certificates
+    - fd-find
+    - gh              # from the GitHub CLI repo added by the packages role
+    - terraform       # from the HashiCorp repo added by the packages role
+    - python3-dev
+    - python3-pip
+    - python3-venv
+  Alpine:
+    # build-base pulls gcc, g++, musl-dev, binutils and make — cargo needs a
+    # working C toolchain and linker to build the crates below.
+    - build-base
+    # busybox's find/readlink are too thin for the dotfiles role's symlink
+    # cleanup; coreutils/findutils replace them with the GNU versions.
+    - coreutils
+    - findutils
+    - fd
+    - github-cli
+    - ca-certificates
+    - python3
+    - python3-dev
+    - py3-pip
+    # No terraform: HashiCorp publishes no musl build, and Alpine dropped the
+    # package after the BUSL relicense. Add `opentofu` here if you want it.
+  Archlinux:      # best-effort, untested
+    - gcc
+    - base-devel
+    - fd
+    - github-cli
+    - python
+    - python-pip
+  RedHat:         # best-effort, untested
+    - gcc
+    - gcc-c++
+    - ca-certificates
+    - fd-find
+    - python3-devel
+    - python3-pip
+
+# Resolved list handed to the package manager. The playbook asserts the running
+# distro's family has an entry above before any role gets this far.
+system_packages: >-
+  {{ system_packages_common
+     + (system_packages_by_family[ansible_os_family] | default([])) }}
+
+# Ubuntu-only: the deadsnakes PPA and the Python it provides. Debian proper and
+# every other distro use the system python3 from the lists above.
+deadsnakes_enabled: "{{ ansible_distribution == 'Ubuntu' }}"
+deadsnakes_packages:
   - python3.12
   - python3.12-venv
-  - python3-dev
-  - python3-pip
 
-# Rust CLI tools installed with `cargo install`.
+# WSL-only packages. WSLg already provides the PulseAudio server
+# (/mnt/wslg/PulseServer); these are the client tools that make audio (e.g.
+# Claude Code voice via sox's play/rec) actually work.
+wsl_packages_by_family:
+  Debian:
+    - sox
+    - libsox-fmt-all
+    - pulseaudio-utils
+    - alsa-utils
+    - ffmpeg
+  Alpine:
+    - sox
+    - pulseaudio-utils
+    - alsa-utils
+    - ffmpeg
+
+# ---------------------------------------------------------------------------
+# Language toolchains
+# ---------------------------------------------------------------------------
+
+# Rust CLI tools installed with `cargo install`. Built from source, so these are
+# distro-agnostic — they just need the C toolchain installed above.
 cargo_crates:
   - eza
   - bat
@@ -56,7 +119,16 @@ cargo_crates:
   - zoxide
   - hyperfine
 
-# Global npm packages (installed via nvm's node).
+# Node: nvm ships glibc-only prebuilt binaries, so musl distros install the
+# distro's own nodejs instead. Override to force either method.
+node_install_method: "{{ 'package' if ansible_os_family == 'Alpine' else 'nvm' }}"
+node_packages_by_family:
+  Debian: [nodejs, npm]
+  Alpine: [nodejs, npm]
+  Archlinux: [nodejs, npm]
+  RedHat: [nodejs, npm]
+
+# Global npm packages.
 npm_globals:
   - tree-sitter-cli
   - neovim
@@ -66,27 +138,76 @@ npm_globals:
 # so it lives in neovim_provider_packages below instead.
 uv_tools: []
 
+# ---------------------------------------------------------------------------
+# Neovim
+# ---------------------------------------------------------------------------
+
+# The upstream AppImage is linked against glibc, so musl distros install the
+# distro package instead. Override to force either method.
+neovim_install_method: "{{ 'package' if ansible_os_family == 'Alpine' else 'appimage' }}"
+neovim_appimage_url: "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage"
+neovim_packages_by_family:
+  Debian: [neovim]
+  Alpine: [neovim]
+  Archlinux: [neovim]
+  RedHat: [neovim]
+
 # Packages installed into Neovim's dedicated uv venv (its Python provider).
 neovim_provider_packages:
   - pynvim
 
-# Docker Engine, installed from Docker's official apt repo (not Docker Desktop).
-docker_packages:
-  - docker-ce
-  - docker-ce-cli
-  - containerd.io
-  - docker-buildx-plugin
-  - docker-compose-plugin
+# Build the provider venv against the system interpreter rather than letting uv
+# download its own — the downloaded builds are glibc-first.
+neovim_provider_python: python3
+
+# ---------------------------------------------------------------------------
+# Docker
+# ---------------------------------------------------------------------------
+
+# Docker Engine (not Docker Desktop). On Debian/Ubuntu it comes from Docker's
+# official apt repo; elsewhere from the distro's own packages.
+docker_packages_by_family:
+  Debian:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-buildx-plugin
+    - docker-compose-plugin
+  Alpine:
+    - docker
+    - docker-cli-buildx
+    - docker-cli-compose
+  Archlinux:
+    - docker
+    - docker-buildx
+    - docker-compose
+  RedHat:
+    - docker
+    - docker-compose
 
 # Add the provisioning user to the docker group (takes effect on next login).
 docker_add_user_to_group: true
 
-# AWS CLI v2, installed from AWS's official bundled installer. apt only ships
-# the deprecated v1 (`awscli`), so the awscli role uses this zip instead.
+# Enable and start the daemon. Skipped automatically when there's no init
+# system to talk to (e.g. inside a container).
+docker_manage_service: true
+
+# ---------------------------------------------------------------------------
+# AWS CLI
+# ---------------------------------------------------------------------------
+
+# AWS's official bundled installer is glibc-only, so musl distros use the distro
+# package. Debian/Ubuntu can't: apt only ships the deprecated v1 (`awscli`).
+awscli_install_method: "{{ 'package' if ansible_os_family == 'Alpine' else 'bundle' }}"
 awscli_installer_url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+awscli_packages_by_family:
+  Alpine: [aws-cli]
+  Archlinux: [aws-cli-v2]
+  RedHat: [awscli2]
+
+# ---------------------------------------------------------------------------
+# Dotfiles
+# ---------------------------------------------------------------------------
 
 # Stow packages are NOT listed here — the dotfiles role stows every directory
 # under stow/ automatically, and backs up any conflicting real files first.
-
-# Neovim AppImage download URL.
-neovim_appimage_url: "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage"

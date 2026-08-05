@@ -1,0 +1,17 @@
+---
+# Node from the distro's own repositories. Used where nvm's glibc-only
+# prebuilt binaries won't run (musl distros such as Alpine).
+- name: Fail early when Node package names are unknown for this distro
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family in node_packages_by_family
+    fail_msg: >-
+      No node_packages_by_family entry for '{{ ansible_os_family }}'.
+      Add one to group_vars/all.yml, or set node_install_method: nvm.
+    quiet: true
+
+- name: Install Node and npm
+  become: true
+  ansible.builtin.package:
+    name: "{{ node_packages_by_family[ansible_os_family] }}"
+    state: present

@@ -1,0 +1,46 @@
+---
+# The upstream AppImage is linked against glibc — see package.yml for the musl
+# (Alpine) path. It's extracted rather than run in place, so no FUSE needed.
+- name: Check whether Neovim is installed
+  ansible.builtin.stat:
+    path: /opt/nvim/AppRun
+  register: nvim_installed
+
+- name: Install Neovim from AppImage
+  when: not nvim_installed.stat.exists
+  block:
+    - name: Download Neovim AppImage
+      ansible.builtin.get_url:
+        url: "{{ neovim_appimage_url }}"
+        dest: /tmp/nvim.appimage
+        mode: "0755"
+
+    - name: Extract the AppImage
+      ansible.builtin.command: /tmp/nvim.appimage --appimage-extract
+      args:
+        chdir: /tmp
+
+    - name: Remove any stale Neovim install
+      become: true
+      ansible.builtin.file:
+        path: /opt/nvim
+        state: absent
+
+    - name: Move Neovim into /opt
+      become: true
+      ansible.builtin.command: mv /tmp/squashfs-root /opt/nvim
+      args:
+        creates: /opt/nvim/AppRun
+
+    - name: Symlink nvim into PATH
+      become: true
+      ansible.builtin.file:
+        src: /opt/nvim/AppRun
+        dest: /usr/local/bin/nvim
+        state: link
+        force: true
+
+    - name: Remove the downloaded AppImage
+      ansible.builtin.file:
+        path: /tmp/nvim.appimage
+        state: absent

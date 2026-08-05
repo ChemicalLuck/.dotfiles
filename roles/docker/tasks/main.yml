@@ -1,45 +1,30 @@
 ---
-- name: Determine dpkg architecture
-  ansible.builtin.command: dpkg --print-architecture
-  register: deb_arch
-  changed_when: false
+- name: Fail early when Docker package names are unknown for this distro
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family in docker_packages_by_family
+    fail_msg: >-
+      No docker_packages_by_family entry for '{{ ansible_os_family }}'.
+      Add one to group_vars/all.yml.
+    quiet: true
 
-- name: Create apt keyrings directory
-  become: true
-  ansible.builtin.file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: "0755"
-
-- name: Add Docker GPG key
-  become: true
-  ansible.builtin.get_url:
-    url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
-    dest: /etc/apt/keyrings/docker.asc
-    mode: "0644"
-
-- name: Remove stale deb822 Docker source (conflicts with docker.list)
-  become: true
-  ansible.builtin.file:
-    path: /etc/apt/sources.list.d/docker.sources
-    state: absent
-
-- name: Add Docker apt repository
-  become: true
-  ansible.builtin.apt_repository:
-    repo: >-
-      deb [arch={{ deb_arch.stdout }} signed-by=/etc/apt/keyrings/docker.asc]
-      https://download.docker.com/linux/{{ ansible_distribution | lower }}
-      {{ ansible_distribution_release }} stable
-    filename: docker
-    state: present
+# Debian/Ubuntu pull Docker Engine from Docker's own apt repo; every other
+# family uses the distro's packages, which is what upstream recommends there.
+- name: Set up the Docker package source
+  ansible.builtin.include_tasks: "{{ lookup('ansible.builtin.first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_os_family }}.yml"
+        - default.yml
+      paths:
+        - "{{ role_path }}/tasks"
 
 - name: Install Docker Engine
   become: true
-  ansible.builtin.apt:
-    name: "{{ docker_packages }}"
+  ansible.builtin.package:
+    name: "{{ docker_packages_by_family[ansible_os_family] }}"
     state: present
-    update_cache: true
 
 - name: Add user to the docker group
   become: true
@@ -49,10 +34,14 @@
     append: true
   when: docker_add_user_to_group | bool
 
+# `service` speaks systemd, OpenRC and friends; skip entirely where there's no
+# init system to talk to (containers, WSL without systemd).
 - name: Enable and start Docker
   become: true
-  ansible.builtin.systemd:
+  ansible.builtin.service:
     name: docker
     enabled: true
     state: started
-  when: ansible_service_mgr == 'systemd'
+  when:
+    - docker_manage_service | bool
+    - ansible_service_mgr in ['systemd', 'openrc', 'sysvinit', 'launchd', 'runit']
