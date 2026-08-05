@@ -56,7 +56,12 @@ if ! command -v ansible-playbook >/dev/null 2>&1; then
 fi
 
 echo "Installing required Ansible collections..."
-ansible-galaxy collection install -r requirements.yml
+# --upgrade matters on distros that package Ansible with its collections
+# bundled into site-packages (Alpine, Fedora): those copies carry no
+# MANIFEST.json, so ansible-galaxy reports "already installed" and skips them,
+# leaving you on whatever subset the distro shipped. Forcing the upgrade puts a
+# complete collection in ~/.ansible/collections, which takes precedence.
+ansible-galaxy collection install -r requirements.yml --upgrade
 
 # --- run --------------------------------------------------------------------
 echo "Running playbook..."
