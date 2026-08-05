@@ -55,13 +55,25 @@ if ! command -v ansible-playbook >/dev/null 2>&1; then
     install_ansible
 fi
 
+# --- collections ------------------------------------------------------------
+# Distros that bundle Ansible's collections into site-packages (Alpine, Fedora)
+# ship them without a MANIFEST.json, so ansible-galaxy reads their version as
+# '*'. That breaks both routes: `--upgrade` feeds them to the dependency
+# resolver, which aborts with "invalid semantic version '*'", while a plain
+# install treats the requirement as satisfied and does nothing.
+#
+# Neither is fatal — the bundled collections cover what this playbook uses — so
+# try for a current copy, then fall back to whatever is already on the system.
 echo "Installing required Ansible collections..."
-# --upgrade matters on distros that package Ansible with its collections
-# bundled into site-packages (Alpine, Fedora): those copies carry no
-# MANIFEST.json, so ansible-galaxy reports "already installed" and skips them,
-# leaving you on whatever subset the distro shipped. Forcing the upgrade puts a
-# complete collection in ~/.ansible/collections, which takes precedence.
-ansible-galaxy collection install -r requirements.yml --upgrade
+if ansible-galaxy collection install -r requirements.yml --upgrade; then
+    :
+elif ansible-galaxy collection install -r requirements.yml; then
+    :
+else
+    echo "Warning: could not install collections from Galaxy; continuing with" >&2
+    echo "the collections already present. If a role later reports 'couldn't"  >&2
+    echo "resolve module/action', that collection is the one to install."      >&2
+fi
 
 # --- run --------------------------------------------------------------------
 echo "Running playbook..."
