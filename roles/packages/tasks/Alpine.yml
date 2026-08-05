@@ -5,31 +5,36 @@
 #
 # This runs before `bash` is installed, so it has to be POSIX sh that busybox
 # can execute — no bashisms, no GNU-only sed/grep flags.
+#
+# The script goes under `cmd:` rather than being given free-form. Free-form
+# module args are run through Ansible's argument splitter, which counts quotes
+# without understanding shell syntax — so a lone apostrophe anywhere, even in a
+# comment, fails the whole file to load. `cmd:` skips that parsing entirely.
 - name: Ensure the Alpine community repository is enabled
   become: true
-  ansible.builtin.shell: |
-    repos=/etc/apk/repositories
-    changed=0
+  ansible.builtin.shell:
+    executable: /bin/sh
+    cmd: |
+      repos=/etc/apk/repositories
+      changed=0
 
-    # Uncomment an existing, commented-out community line.
-    if grep -qE '^#[[:space:]]*[^[:space:]]+/community[[:space:]]*$' "$repos"; then
-      sed -i -r 's|^#[[:space:]]*([^[:space:]]+/community)[[:space:]]*$|\1|' "$repos"
-      changed=1
-    fi
-
-    # No community line at all: derive one from the main line's mirror.
-    if ! grep -qE '^[^[:space:]#]+/community[[:space:]]*$' "$repos"; then
-      main=$(grep -E '^[^[:space:]#]+/main[[:space:]]*$' "$repos" | head -n1)
-      if [ -n "$main" ]; then
-        printf '%s\n' "${main%/main}/community" >> "$repos"
+      # Uncomment an existing, commented-out community line.
+      if grep -qE '^#[[:space:]]*[^[:space:]]+/community[[:space:]]*$' "$repos"; then
+        sed -i -r 's|^#[[:space:]]*([^[:space:]]+/community)[[:space:]]*$|\1|' "$repos"
         changed=1
       fi
-    fi
 
-    [ "$changed" -eq 1 ] && echo changed
-    exit 0
-  args:
-    executable: /bin/sh
+      # No community line at all: derive one from the mirror on the main line.
+      if ! grep -qE '^[^[:space:]#]+/community[[:space:]]*$' "$repos"; then
+        main=$(grep -E '^[^[:space:]#]+/main[[:space:]]*$' "$repos" | head -n1)
+        if [ -n "$main" ]; then
+          printf '%s\n' "${main%/main}/community" >> "$repos"
+          changed=1
+        fi
+      fi
+
+      [ "$changed" -eq 1 ] && echo changed
+      exit 0
   register: apk_community
   changed_when: "'changed' in apk_community.stdout"
 
