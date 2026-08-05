@@ -17,10 +17,23 @@
   ansible.builtin.command: "{{ ansible_env.HOME }}/.cargo/bin/rustup default nightly"
   when: "'nightly' not in rustup_default.stdout"
 
+# Driven through cargo itself rather than community.general.cargo: distro
+# packages of Ansible ship collections without MANIFEST.json, which makes
+# ansible-galaxy skip the install ("already installed") and leaves you on
+# whatever subset the distro shipped. Alpine's copy has no `cargo` module.
+# `cargo install --list` is one command and no collection dependency.
+- name: List already-installed cargo crates
+  ansible.builtin.command: cargo install --list
+  register: cargo_installed
+  changed_when: false
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.PATH }}"
+
+# `cargo install --list` prints "<crate> v<version>:" followed by an indented
+# line per binary, so the unindented lines are the crate names.
 - name: Install cargo crates
-  community.general.cargo:
-    name: "{{ item }}"
-    state: present
+  ansible.builtin.command: cargo install {{ item }}
   loop: "{{ cargo_crates }}"
+  when: item not in (cargo_installed.stdout | regex_findall('^(\\S+) v[0-9]', multiline=True))
   environment:
     PATH: "{{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.PATH }}"
