@@ -54,6 +54,10 @@ system_packages_by_family:
     # cleanup; coreutils/findutils replace them with the GNU versions.
     - coreutils
     - findutils
+    # busybox has no usermod/chsh, so the dotfiles role can't set the login
+    # shell without shadow. Debian, Arch and RedHat ship usermod in their base
+    # install (passwd / shadow-utils), so only Alpine needs it listed.
+    - shadow
     - fd
     - github-cli
     - ca-certificates

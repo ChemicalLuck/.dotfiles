@@ -134,9 +134,17 @@ if [ -n "$_fd_bin" ]; then
 fi
 unset _fd_bin
 
-# Bin paths
-export PATH="${PATH:+${PATH}:}$HOME/.local/bin"
-export PATH="${PATH:+${PATH}:}/usr/local/go/bin"
+# Bin paths. Guarded: on a login shell ~/.bash_profile sources ~/.profile
+# first, and uv's ~/.local/bin/env may already have added ~/.local/bin.
+_add_path() {
+    case ":${PATH}:" in
+        *:"$1":*) ;;
+        *) export PATH="${PATH:+${PATH}:}$1" ;;
+    esac
+}
+_add_path "$HOME/.local/bin"
+_add_path /usr/local/go/bin
+unset -f _add_path
 
 # nvm
 export NVM_DIR="$HOME/.nvm"

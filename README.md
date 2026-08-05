@@ -50,8 +50,9 @@ playbook fails fast, before installing anything, on a family it has no map for.
 | Claude Code | native installer | native installer + `libgcc`/`libstdc++`/`ripgrep` |
 
 Alpine also needs `coreutils`/`findutils` (busybox's `find`/`readlink` are too
-thin for the dotfiles role) and `bash` (its shell tasks aren't ash-compatible);
-both are in the Alpine package list. The `packages` role enables Alpine's
+thin for the dotfiles role), `shadow` (busybox has no `usermod`, so the
+dotfiles role can't set the login shell) and `bash` (its shell tasks aren't
+ash-compatible); all are in the Alpine package list. The `packages` role enables Alpine's
 `community` repository if it isn't already, since most of the tooling lives
 there.
 
@@ -77,7 +78,8 @@ roles/
   uv/               # uv + uv tool installs
   neovim/           # appimage.yml or package.yml + uv-managed provider venv
   claude/           # Claude Code CLI via Anthropic's native installer
-  dotfiles/         # stow each package, write per-machine stubs
+  dotfiles/         # set bash as the login shell, stow each package, write
+                    # per-machine stubs
 stow/               # the stow packages (this is the stow dir)
   bash/  git/  tmux/  rust/  nvim/  tealdeer/  scripts/  ubuntu/
 ```
