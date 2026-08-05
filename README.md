@@ -47,6 +47,7 @@ playbook fails fast, before installing anything, on a family it has no map for.
 | Neovim | upstream AppImage | `neovim` — the AppImage is glibc-only |
 | AWS CLI v2 | AWS's bundled installer | `aws-cli` — the installer is glibc-only |
 | Services | systemd | OpenRC (both via `ansible.builtin.service`) |
+| Claude Code | native installer | native installer + `libgcc`/`libstdc++`/`ripgrep` |
 
 Alpine also needs `coreutils`/`findutils` (busybox's `find`/`readlink` are too
 thin for the dotfiles role) and `bash` (its shell tasks aren't ash-compatible);
@@ -75,6 +76,7 @@ roles/
   node/             # nvm.yml or package.yml, then global npm packages
   uv/               # uv + uv tool installs
   neovim/           # appimage.yml or package.yml + uv-managed provider venv
+  claude/           # Claude Code CLI via Anthropic's native installer
   dotfiles/         # stow each package, write per-machine stubs
 stow/               # the stow packages (this is the stow dir)
   bash/  git/  tmux/  rust/  nvim/  tealdeer/  scripts/  ubuntu/

@@ -25,4 +25,5 @@
     - node        # node via nvm (glibc) or the distro (musl), global npm packages
     - uv          # uv + uv tools (must precede neovim, which uses uv)
     - neovim      # AppImage or distro package + uv-managed Python provider venv
+    - claude      # Claude Code CLI via Anthropic's native installer
     - dotfiles    # stow packages + per-machine stubs
