@@ -206,6 +206,23 @@ awscli_packages_by_family:
   RedHat: [awscli2]
 
 # ---------------------------------------------------------------------------
+# Claude Code
+# ---------------------------------------------------------------------------
+
+# What the native installer should fetch: "latest", "stable", or a pinned
+# version number such as "2.1.89".
+claude_channel: latest
+
+# Runtime dependencies the installer doesn't bring with it. bash and curl are
+# already in system_packages_common; musl distros additionally need the C++
+# runtime, plus a system ripgrep because the bundled one is glibc-linked.
+claude_packages_by_family:
+  Alpine:
+    - libgcc
+    - libstdc++
+    - ripgrep
+
+# ---------------------------------------------------------------------------
 # Dotfiles
 # ---------------------------------------------------------------------------
 

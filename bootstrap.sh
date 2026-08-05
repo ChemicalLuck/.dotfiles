@@ -56,22 +56,28 @@ if ! command -v ansible-playbook >/dev/null 2>&1; then
 fi
 
 # --- collections ------------------------------------------------------------
-# --force, not a plain install, and not --upgrade.
+# --force --no-deps. Both flags are load-bearing.
 #
-# A distro can leave a collection directory present but unusable. Alpine's
+# A distro can leave collection directories present but unusable. Alpine's
 # `ansible-pyc` package ships only compiled bytecode — the .py sources live in
-# the `ansible` package — so site-packages ends up holding a community.general
-# whose plugins/modules/ contains nothing but __pycache__. Ansible's loader
-# only looks for .py, so every module in it is invisible and roles die at load
-# time with "couldn't resolve module/action".
+# the `ansible` package — so site-packages fills up with collections whose
+# plugins/modules/ contains nothing but __pycache__, and with no MANIFEST.json
+# or galaxy.yml. Ansible's loader only reads .py, so every module in them is
+# invisible and roles die at load time with "couldn't resolve module/action".
 #
-# Against that, a plain install sees the directory, reports "already installed"
-# and leaves it broken; --upgrade feeds the version-less collection to the
-# dependency resolver, which aborts with "invalid semantic version '*'".
-# --force skips both traps and always writes a complete copy to
-# ~/.ansible/collections, which takes precedence over site-packages.
+# ansible-galaxy scans those directories no matter which path you install to,
+# and each way of asking trips over them differently:
+#
+#   plain      "already installed" — sees the directory, leaves it hollow
+#   --upgrade  ERROR: invalid semantic version '*'   (no version metadata)
+#   --force    ERROR: Failed to find the collection dir deps ... galaxy.yml
+#              does not exist  (resolving community.general's dependency)
+#
+# --no-deps skips the dependency walk that reads those missing galaxy.yml
+# files, and --force overrides the "already installed" check. Dependencies are
+# listed explicitly in requirements.yml so skipping the walk costs nothing.
 echo "Installing required Ansible collections..."
-if ansible-galaxy collection install -r requirements.yml --force; then
+if ansible-galaxy collection install -r requirements.yml --force --no-deps; then
     :
 elif ansible-galaxy collection install -r requirements.yml; then
     :

@@ -170,6 +170,11 @@ export BUN_INSTALL="$HOME/.bun"
 # claude
 export CLAUDE_CODE_ENABLE_TELEMETRY=0
 export DISABLE_TELEMETRY=1
+# The bundled ripgrep is linked against glibc and won't run on musl, so fall
+# back to the system one there (installed by the claude role).
+if compgen -G "/lib/ld-musl-*" >/dev/null 2>&1; then
+    export USE_BUILTIN_RIPGREP=0
+fi
 
 # Per-machine overrides (not tracked in git)
 [ -f ~/.bashrc.local ] && . ~/.bashrc.local

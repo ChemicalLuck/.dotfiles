@@ -1,5 +1,14 @@
 ---
 # Ansible collections required by the playbook.
-# Installed by bootstrap.sh via: ansible-galaxy collection install -r requirements.yml
+# Installed by bootstrap.sh — see the comment there for why it uses
+# `--force --no-deps`.
 collections:
+  # Provides the apk module (and the doas become plugin).
   - name: community.general
+
+  # community.general's own dependency. Listed explicitly because bootstrap.sh
+  # installs with --no-deps: a distro can leave a hollow copy of this in
+  # site-packages with no galaxy.yml, which kills ansible-galaxy's dependency
+  # resolver before anything is installed. Naming it here means we still get a
+  # real copy rather than relying on whatever the distro left behind.
+  - name: community.library_inventory_filtering_v1

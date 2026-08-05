@@ -1,0 +1,30 @@
+---
+# Claude Code CLI, installed with Anthropic's native installer. It drops a
+# launcher at ~/.local/bin/claude pointing into ~/.local/share/claude/versions/
+# and updates itself in the background, so Ansible only has to get it there
+# once — hence `creates` rather than a version check.
+- name: Install Claude Code runtime dependencies
+  become: true
+  ansible.builtin.package:
+    name: "{{ claude_packages_by_family[ansible_os_family] }}"
+    state: present
+  when: ansible_os_family in claude_packages_by_family
+
+- name: Install Claude Code
+  ansible.builtin.shell:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.local/bin/claude"
+    cmd: |
+      set -o pipefail
+      curl -fsSL https://claude.ai/install.sh | bash -s {{ claude_channel }}
+
+- name: Verify Claude Code runs
+  ansible.builtin.command: claude --version
+  register: claude_version
+  changed_when: false
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+
+- name: Report the installed version
+  ansible.builtin.debug:
+    msg: "{{ claude_version.stdout }}"
