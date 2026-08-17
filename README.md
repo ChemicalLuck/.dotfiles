@@ -61,16 +61,23 @@ The install methods are overridable if a default doesn't suit you — e.g.
 
 ### If the `claude` role appears to hang
 Ansible prints nothing until a task returns, and the Claude Code installer
-downloads a ~180MB binary with no progress output (retrying three times on a
+moves several hundred MB with no progress output (retrying three times on a
 dropped connection), so a slow link looks exactly like a hang. The role bounds
-every task with `claude_install_timeout` / `claude_verify_timeout` so it fails
-with a message instead. If you hit those, in the VM:
+every task with `claude_install_timeout` / `claude_verify_timeout`, and checks
+RAM and disk headroom first, so it fails with a message instead. If you hit
+either, in the VM:
 
 ```bash
-curl -sI https://downloads.claude.ai/claude-code-releases/latest   # want a 200
-free -m                                                           # want >512MB free
-ls -ld ~/.bashrc ~/.zshrc ~/.profile ~/.config/fish/config.fish    # want no 'd' lines
+sh scripts/claude-install-diagnose.sh
 ```
+
+That script walks the install one stage at a time with a timeout on each, so it
+always finishes and tells you where the real install would have stalled. Note
+that a `200` from `curl -sI .../latest` only proves DNS and TLS reach the host:
+that pointer is a few bytes, while the install transfers roughly **610MB** (a
+~305MB binary, downloaded once by `install.sh` and again by `claude install`).
+Stage 5 of the script measures actual throughput, which is what the 900s
+timeout is really up against.
 
 A *directory* at one of those shell config paths hangs `claude install`,
 `claude update` and `claude doctor` outright on versions before v2.1.214 — the

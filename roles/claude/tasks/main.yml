@@ -44,6 +44,34 @@
       v2.1.214. Move it aside and re-run.
     quiet: true
 
+# The install moves the binary twice: install.sh downloads ~305MB into
+# ~/.claude/downloads, then `claude install` pulls the same build again into
+# ~/.local/share/claude/versions. A VM that's short on either RAM or disk
+# doesn't fail cleanly — it thrashes or stalls, which is indistinguishable from
+# a slow download until the timeout fires. Check before spending 15 minutes.
+- name: Measure free space on the home filesystem
+  ansible.builtin.command: df -Pk {{ ansible_facts['env'].HOME | quote }}
+  register: claude_df
+  changed_when: false
+
+- name: Fail early when the VM is too small to install
+  vars:
+    claude_home_free_mb: "{{ (claude_df.stdout_lines[-1].split()[3] | int) // 1024 }}"
+    claude_free_mb: "{{ ansible_facts['memory_mb']['nocache']['free'] }}"
+  ansible.builtin.assert:
+    that:
+      # Both sides through `int`: an override passed with -e arrives as a string.
+      - claude_home_free_mb | int >= claude_disk_required_mb | int
+      - claude_free_mb | int >= claude_memory_required_mb | int
+    fail_msg: >-
+      Not enough headroom to install Claude Code:
+      {{ claude_home_free_mb }}MB free on {{ ansible_facts['env'].HOME }}
+      (need {{ claude_disk_required_mb }}MB) and
+      {{ claude_free_mb }}MB free RAM (need {{ claude_memory_required_mb }}MB).
+      The installer downloads a ~305MB binary twice and needs roughly 512MB of
+      working memory; short of either it stalls rather than failing.
+    quiet: true
+
 - name: Install Claude Code
   ansible.builtin.shell:
     executable: /bin/bash
