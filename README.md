@@ -47,7 +47,7 @@ playbook fails fast, before installing anything, on a family it has no map for.
 | Neovim | upstream AppImage | `neovim` — the AppImage is glibc-only |
 | AWS CLI v2 | AWS's bundled installer | `aws-cli` — the installer is glibc-only |
 | Services | systemd | OpenRC (both via `ansible.builtin.service`) |
-| Claude Code | native installer | native installer + `libgcc`/`libstdc++`/`ripgrep` |
+| Claude Code | native installer | native installer + `libgcc`/`libstdc++`/`ripgrep` + `USE_BUILTIN_RIPGREP=0` |
 
 Alpine also needs `coreutils`/`findutils` (busybox's `find`/`readlink` are too
 thin for the dotfiles role) and `bash` (its shell tasks aren't ash-compatible);
@@ -58,6 +58,26 @@ there.
 The install methods are overridable if a default doesn't suit you — e.g.
 `node_install_method: nvm`, `neovim_install_method: package`,
 `awscli_install_method: bundle`.
+
+### If the `claude` role appears to hang
+Ansible prints nothing until a task returns, and the Claude Code installer
+downloads a ~180MB binary with no progress output (retrying three times on a
+dropped connection), so a slow link looks exactly like a hang. The role bounds
+every task with `claude_install_timeout` / `claude_verify_timeout` so it fails
+with a message instead. If you hit those, in the VM:
+
+```bash
+curl -sI https://downloads.claude.ai/claude-code-releases/latest   # want a 200
+free -m                                                           # want >512MB free
+ls -ld ~/.bashrc ~/.zshrc ~/.profile ~/.config/fish/config.fish    # want no 'd' lines
+```
+
+A *directory* at one of those shell config paths hangs `claude install`,
+`claude update` and `claude doctor` outright on versions before v2.1.214 — the
+role asserts against it before installing. Note that nothing in
+`stow/bash/.bashrc` applies during provisioning (Ansible runs non-interactive
+shells, and the `dotfiles` role hasn't stowed it yet), so anything the CLI
+needs at install time lives in `claude_env` in `group_vars/all.yml` instead.
 
 ## Layout
 ```

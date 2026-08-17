@@ -222,6 +222,33 @@ claude_packages_by_family:
     - libstdc++
     - ripgrep
 
+# Environment for the install and verify tasks. Ansible tasks run a
+# non-interactive shell, so nothing in stow/bash/.bashrc reaches them (and the
+# dotfiles role hasn't stowed it yet anyway) — whatever the CLI needs during
+# provisioning has to be set here as well.
+claude_env_common:
+  # The installer's last step is `claude install`, which renders a TUI. No
+  # terminal is attached under Ansible; these keep it on the plain path rather
+  # than driving a terminal that will never answer.
+  CI: "1"
+  TERM: dumb
+claude_env_by_family:
+  Alpine:
+    # The bundled ripgrep is glibc-linked and won't exec on musl. Mirrors the
+    # guard in stow/bash/.bashrc, which only covers interactive shells.
+    USE_BUILTIN_RIPGREP: "0"
+claude_env: >-
+  {{ claude_env_common
+     | combine(claude_env_by_family[ansible_facts['os_family']] | default({})) }}
+
+# Seconds to allow each Claude Code task before failing. The installer pulls a
+# ~180MB binary with `curl -fsSL` (no progress output) and retries three times
+# on a dropped connection, and Ansible prints nothing until a task returns — so
+# a slow or flaky link is indistinguishable from a hang. Cap it so the play
+# fails with a message instead of sitting there.
+claude_install_timeout: 900
+claude_verify_timeout: 120
+
 # ---------------------------------------------------------------------------
 # Dotfiles
 # ---------------------------------------------------------------------------

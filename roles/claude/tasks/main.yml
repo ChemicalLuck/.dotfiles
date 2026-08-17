@@ -3,6 +3,11 @@
 # launcher at ~/.local/bin/claude pointing into ~/.local/share/claude/versions/
 # and updates itself in the background, so Ansible only has to get it there
 # once — hence `creates` rather than a version check.
+#
+# Every task here is bounded by async/poll. The installer is silent while it
+# downloads and `claude install` renders a TUI, so anything that goes wrong
+# under Ansible shows up as a task that never returns. A timeout turns that
+# into a failure with a message.
 - name: Install Claude Code runtime dependencies
   become: true
   ansible.builtin.package:
@@ -10,20 +15,57 @@
     state: present
   when: ansible_facts['os_family'] in claude_packages_by_family
 
+# `claude install`, `claude update` and `claude doctor` scan the shell rc files
+# for a stale `claude` alias. Before v2.1.214 a *directory* at one of those
+# paths made all three hang indefinitely with no output — which under Ansible
+# looks like the playbook wedging on this role. Cheap to rule out up front.
+- name: Stat the shell config paths the installer scans
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env'].HOME }}/{{ item }}"
+  loop:
+    - .bashrc
+    - .zshrc
+    - .profile
+    - .config/fish/config.fish
+  register: claude_shell_rc
+
+- name: Fail when a directory sits at one of those paths
+  vars:
+    # `stat.isdir` is absent, not false, for a path that doesn't exist.
+    claude_rc_dirs: >-
+      {{ claude_shell_rc.results | selectattr('stat.isdir', 'defined')
+         | selectattr('stat.isdir') | map(attribute='item') | list }}
+  ansible.builtin.assert:
+    that: claude_rc_dirs | length == 0
+    fail_msg: >-
+      A directory sits at {{ claude_rc_dirs | join(', ') }} under
+      {{ ansible_facts['env'].HOME }}. Claude Code's installer scans those
+      paths for a stale `claude` alias and hangs on a directory before
+      v2.1.214. Move it aside and re-run.
+    quiet: true
+
 - name: Install Claude Code
   ansible.builtin.shell:
     executable: /bin/bash
     creates: "{{ ansible_facts['env'].HOME }}/.local/bin/claude"
+    # Close stdin explicitly: `claude install` should never be left waiting on
+    # a terminal that Ansible is not going to provide.
+    stdin: ""
+    stdin_add_newline: false
     cmd: |
       set -o pipefail
       curl -fsSL https://claude.ai/install.sh | bash -s {{ claude_channel }}
+  environment: "{{ claude_env }}"
+  async: "{{ claude_install_timeout }}"
+  poll: 10
 
 - name: Verify Claude Code runs
   ansible.builtin.command: claude --version
   register: claude_version
   changed_when: false
-  environment:
-    PATH: "{{ ansible_facts['env'].HOME }}/.local/bin:{{ ansible_facts['env'].PATH }}"
+  environment: "{{ claude_env | combine({'PATH': ansible_facts['env'].HOME ~ '/.local/bin:' ~ ansible_facts['env'].PATH}) }}"
+  async: "{{ claude_verify_timeout }}"
+  poll: 5
 
 - name: Report the installed version
   ansible.builtin.debug:
