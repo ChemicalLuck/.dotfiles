@@ -19,6 +19,10 @@ trap 'rm -rf "$TMP"' EXIT INT TERM
 say() { printf '\n=== %s ===\n' "$1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
+# Every `timeout` below carries -k. `timeout` sends SIGTERM and then waits for
+# the child to exit, so a child that ignores SIGTERM hangs `timeout` itself —
+# the -k follow-up SIGKILL is what makes a bounded step genuinely bounded.
+
 say "0. Host"
 uname -srm
 [ -f /etc/os-release ] && . /etc/os-release && echo "$PRETTY_NAME"
@@ -51,7 +55,7 @@ ls -ld "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile" \
        "$HOME/.config/fish/config.fish" 2>&1
 
 say "3. Version pointer (a few bytes)"
-if ! VERSION=$(timeout 30 curl -fsSL "$BASE/latest" 2>&1); then
+if ! VERSION=$(timeout -k 5 30 curl -fsSL "$BASE/latest" 2>&1); then
     echo "FAILED — cannot reach $BASE/latest"
     echo "$VERSION"
     exit 1
@@ -63,7 +67,7 @@ case "$VERSION" in
 esac
 
 say "4. Manifest (a few KB)"
-if ! timeout 30 curl -fsSL "$BASE/$VERSION/manifest.json" -o "$TMP/manifest.json"; then
+if ! timeout -k 5 30 curl -fsSL "$BASE/$VERSION/manifest.json" -o "$TMP/manifest.json"; then
     echo "FAILED — reachable pointer but manifest download failed"
     exit 1
 fi
@@ -74,7 +78,7 @@ say "5. Sustained throughput (32MB range request)"
 # ~305MB, and claude install then pulls the same binary a second time, so the
 # install moves ~610MB in total.
 START=$(date +%s)
-if timeout 120 curl -fsSL -r 0-33554431 "$BASE/$VERSION/$PLATFORM/claude" \
+if timeout -k 5 120 curl -fsSL -r 0-33554431 "$BASE/$VERSION/$PLATFORM/claude" \
         -o "$TMP/chunk" 2>/dev/null; then
     ELAPSED=$(( $(date +%s) - START ))
     BYTES=$(wc -c < "$TMP/chunk")
@@ -96,7 +100,7 @@ echo "Any HTTP code means the host answered; 403/404/400 on a bare / are expecte
 # A host that is silently dropped (no RST) hangs until connect timeout rather
 # than erroring, which looks identical to the download stalling.
 for h in api.anthropic.com claude.ai platform.claude.com storage.googleapis.com; do
-    if timeout 15 curl -sS -o /dev/null -w '%{http_code}' "https://$h/" >"$TMP/code" 2>"$TMP/err"; then
+    if timeout -k 5 15 curl -sS -o /dev/null -w '%{http_code}' "https://$h/" >"$TMP/code" 2>"$TMP/err"; then
         echo "$h -> $(cat "$TMP/code")"
     else
         echo "$h -> UNREACHABLE ($(tr -d '\n' < "$TMP/err"))"

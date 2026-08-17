@@ -80,9 +80,27 @@
     # a terminal that Ansible is not going to provide.
     stdin: ""
     stdin_add_newline: false
+    # Fetch the script, then run it under an inner `timeout`, rather than
+    # piping curl straight into bash. Two reasons:
+    #
+    #  - `timeout -k` is what actually ends a stuck install. A plain `timeout`
+    #    sends SIGTERM and then *waits* for the child, so a `claude install`
+    #    that ignores SIGTERM hangs the timeout too; -k follows up with
+    #    SIGKILL. Ansible's own async timeout stops waiting on the job but
+    #    does not reliably kill it, which leaves the installer running after
+    #    the play has moved on.
+    #  - Separating the two steps distinguishes "couldn't fetch the script"
+    #    from "the install itself stalled", which the pipe conflated.
+    #
+    # The inner bound is 60s short of the async one so it fires first and
+    # reports, instead of the play failing on the outer timeout.
     cmd: |
-      set -o pipefail
-      curl -fsSL https://claude.ai/install.sh | bash -s {{ claude_channel }}
+      set -euo pipefail
+      script=$(mktemp)
+      trap 'rm -f "$script"' EXIT
+      curl -fsSL https://claude.ai/install.sh -o "$script"
+      timeout -k 30 {{ (claude_install_timeout | int) - 60 }} \
+        bash "$script" {{ claude_channel }}
   environment: "{{ claude_env }}"
   async: "{{ claude_install_timeout }}"
   poll: 10
