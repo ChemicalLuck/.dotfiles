@@ -241,13 +241,21 @@ claude_env: >-
   {{ claude_env_common
      | combine(claude_env_by_family[ansible_facts['os_family']] | default({})) }}
 
-# Seconds to allow each Claude Code task before failing. The installer pulls a
-# ~180MB binary with `curl -fsSL` (no progress output) and retries three times
-# on a dropped connection, and Ansible prints nothing until a task returns — so
-# a slow or flaky link is indistinguishable from a hang. Cap it so the play
-# fails with a message instead of sitting there.
+# Seconds to allow each Claude Code task before failing. The install moves the
+# binary twice — install.sh downloads ~305MB into ~/.claude/downloads, then
+# `claude install` pulls the same build again into ~/.local/share/claude — so
+# it transfers ~610MB with no progress output, retrying three times on a
+# dropped connection. Ansible prints nothing until a task returns, so a slow
+# link is indistinguishable from a hang. 900s covers ~700KB/s sustained; raise
+# it if scripts/claude-install-diagnose.sh reports a slower link than that.
 claude_install_timeout: 900
 claude_verify_timeout: 120
+
+# Headroom the install needs, checked before it starts. Two ~305MB copies of
+# the binary land under $HOME, and the installer itself wants ~512MB of working
+# memory — below either the install stalls instead of failing cleanly.
+claude_disk_required_mb: 700
+claude_memory_required_mb: 512
 
 # ---------------------------------------------------------------------------
 # Dotfiles
